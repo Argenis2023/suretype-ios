@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 @main
 struct SureTypeHostApp: App {
@@ -11,6 +12,11 @@ struct SureTypeHostApp: App {
 
 struct ContentView: View {
     @State private var text = ""
+
+    private var spellInfo: String {
+        let langs = UITextChecker.availableLanguages.filter { $0.lowercased().hasPrefix("es") || $0.lowercased().hasPrefix("en") }
+        return langs.isEmpty ? "ninguno" : langs.sorted().joined(separator: ", ")
+    }
 
     var body: some View {
         NavigationView {
@@ -33,18 +39,20 @@ struct ContentView: View {
                         .font(.headline)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Pulsa cada tecla una vez por letra. El teclado adivina la palabra y la escribe en el campo.")
-                        Text("La tecla con las flechas circulares rota entre las otras candidatas.")
-                        Text("Espacio acepta la palabra. También puedes tocar una candidata en la barra de arriba.")
-                        Text("Mantén pulsada una tecla para elegir una letra exacta: tildes, ü y ñ. Así también deletreas nombres nuevos, que el teclado aprende.")
-                        Text("El botón ES/EN cambia el idioma. Mantenerlo 1,5 segundos borra las palabras aprendidas.")
-                        Text("Mantén pulsado el punto para ver , ? ! ¿ ¡ y '.")
-                        Text("Entre palabras, la barra de arriba propone la palabra que suele venir después. Tócala para escribirla.")
-                        Text("Dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula.")
+                        Text("Es un teclado QWERTY normal. Tú escribes cada palabra completa.")
+                        Text("Si una palabra está mal escrita, aparece en rojo en la barra de arriba con hasta tres correcciones. Toca una para reemplazarla.")
+                        Text("Si la palabra en rojo sí es correcta (un nombre, por ejemplo), tócala a ella para guardarla y que no se marque más.")
+                        Text("Dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula. También se pone mayúscula al empezar una frase.")
+                        Text("Mantén pulsada una vocal, la n o la c para elegir tilde, ü, ñ o ç. Mantén pulsado el punto para ver ? ! ¿ ¡ y '.")
+                        Text("El botón ES/EN cambia el idioma del corrector. Mantenerlo 1,5 segundos borra las palabras guardadas.")
                     }
                     .font(.subheadline)
 
                     Divider()
+
+                    Text("Corrector disponible: " + spellInfo)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
 
                     Text("Zona de prueba")
                         .font(.headline)

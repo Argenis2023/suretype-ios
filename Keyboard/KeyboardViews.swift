@@ -158,6 +158,8 @@ final class SuggestionBar: UIView {
     private var windowStart = 0
     private let slotCount = 4
     var onSelect: ((Int) -> Void)?
+    /// Si es true, la primera casilla es una palabra mal escrita y se muestra en rojo
+    var flagFirst = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -216,6 +218,7 @@ final class SuggestionBar: UIView {
             if idx < candidates.count {
                 let isCurrent = (idx == current)
                 b.setTitle(candidates[idx], for: .normal)
+                b.setTitleColor((flagFirst && idx == 0) ? UIColor.systemRed : UIColor.label, for: .normal)
                 b.titleLabel?.font = isCurrent ? UIFont.boldSystemFont(ofSize: 17) : UIFont.systemFont(ofSize: 17)
                 b.backgroundColor = isCurrent ? Theme.letterKey : UIColor.clear
                 b.isHidden = false
