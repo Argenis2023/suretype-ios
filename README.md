@@ -9,6 +9,8 @@ Teclado personal estilo SureType (el de las BlackBerry): 2 letras por tecla y un
 - **Diccionario:** español e inglés (unas 45.000 palabras cada uno), ordenadas por frecuencia. El botón ES/EN de la barra cambia de idioma.
 - **Aprende:** las palabras que eliges suben de prioridad. Las palabras nuevas se aprenden cuando las deletreas con pulsación larga. Todo queda guardado solo en el teléfono.
 - **Autocorrección:** si pulsas una tecla vecina por error, o dos teclas intercambiadas, o una tecla de más, las palabras que sí existen aparecen al final de la lista y las alcanzas con la tecla de rotar.
+- **Siguiente palabra:** entre palabras, la barra propone lo que suele venir después (según el contexto y lo que has escrito). El contexto también ayuda a elegir entre formas como esta/está o canto/cantó.
+- **Doble espacio:** dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula.
 - **Tildes y ñ:** mantén pulsada una tecla y desliza el dedo para elegir la letra exacta (a, á, s / u, ú, ü, i, í / l, ñ ...). Esa letra queda fija dentro de la palabra.
 - **Números y símbolos:** tecla `123`, con una segunda página `#+=`. El punto, mantenido, ofrece `, ? ! ¿ ¡ '`.
 - **Mayúsculas:** una pulsación para la siguiente letra, doble pulsación para bloquear. Se activan solas al empezar una frase.
@@ -52,26 +54,15 @@ Si la ejecución sale en rojo: abre el paso que falló, copia las últimas 60 l�
 
 La app "SureType" que aparece en la pantalla de inicio solo trae las instrucciones y una zona de prueba. El teclado en sí vive dentro de ella.
 
-## Renovación automática de la firma (SideStore)
+## Cada 7 días
 
-Con una cuenta Apple gratuita la firma dura 7 días. Para no tener que reinstalar, instala **SideStore**, que renueva la firma desde el propio iPhone sin necesitar el PC. El PC se usa una sola vez.
-
-1. Instala los programas de Windows: iTunes e iCloud de apple.com (no los de la Microsoft Store) y **AltServer para Windows** (altstore.io).
-2. Descarga el `.ipa` de **SideStore** desde sidestore.io.
-3. Crea el archivo de emparejamiento con **Jitterbugpair** (conecta el iPhone, déjalo en la pantalla de inicio, acepta "Confiar" y guarda el archivo `.mobiledevicepairing`). Pásalo al iPhone y revisa que conserve la extensión.
-4. Instala SideStore: mantén Shift, haz clic en el icono de AltServer de la bandeja del sistema y elige "Sideload .ipa".
-5. En el iPhone: Ajustes > General > VPN y administración de dispositivos > confiar en tu Apple ID. En iOS 16 o superior, activa también el Modo de desarrollador.
-6. Instala la VPN local que pide la guía actual de SideStore (WireGuard con `SideStore.conf`, o LocalDevVPN en las guías más nuevas) y mantén el túnel activado.
-7. Abre SideStore, elige el archivo de emparejamiento e inicia sesión con tu Apple ID.
-8. Desde SideStore, abre `SureType.ipa` ("+" arriba a la izquierda) para instalar el teclado. A partir de ahí SideStore lo renueva solo.
-
-Guía oficial paso a paso: https://nythepegasus.github.io/SideStore-Docs/guides/install.html
-
-Notas: si reinicias el iPhone hay que volver a encender el túnel de la VPN. La app y el teclado ocupan más de un identificador de app (Apple da 10 a la vez con cuenta gratuita) y SideStore ocupa otros. Si aparece un error de límite, avísame.
+Con una cuenta Apple gratuita la firma dura 7 días. Cuando el teclado deje de abrir, vuelve a instalar la misma `.ipa` con Sideloadly (los pasos 3 y 4). Si te molesta, SideStore o AltStore pueden renovar la firma automáticamente. Con la cuenta gratuita, la app y el teclado ocupan 2 de los 10 identificadores de app que Apple permite por semana.
 
 ## Cambiar o ampliar el diccionario
 
 Edita `tools/build_dictionaries.py` (listas `ES_EXTRA` y `EN_EXTRA` para agregar palabras con una frecuencia), ejecuta `python tools/build_dictionaries.py --preview` y vuelve a subir los cambios. Con eso se regeneran `Keyboard/Resources/dict_es.txt` y `dict_en.txt`. Si cambias la distribución de teclas hay que cambiarla igual en `KEY_LETTERS` (Python) y en `KeyMap` (`Keyboard/SureTypeEngine.swift`).
+
+Los pares de palabras para la predicción salen de `tools/build_bigrams.py` (`python tools/build_bigrams.py RUTA/nltk_data/corpora`), que genera `Keyboard/Resources/bigram_es.txt` y `bigram_en.txt`.
 
 ## Limitaciones conocidas
 

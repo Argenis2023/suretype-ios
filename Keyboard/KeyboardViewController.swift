@@ -31,6 +31,18 @@ final class KeyboardViewController: UIInputViewController {
     private var insertedText = ""
     private var wordCase: ShiftState = .off
     private var lastProxyOp = Date.distantPast
+    private var fuzzyComputed = false
+
+    // Contexto y trabajo diferido
+    private var previousWord: String? = "<s>"
+    private var nextWordsList: [String] = []
+    private var engineReady = false
+    private var flushWork: DispatchWorkItem?
+    private var autoShiftWork: DispatchWorkItem?
+
+    // Doble espacio = punto y espacio
+    private var lastSpaceTime = Date.distantPast
+    private var doubleSpaceArmed = false
 
     // Referencias a teclas que cambian de aspecto
     private var letterKeys: [KeyButton] = []
@@ -68,11 +80,24 @@ final class KeyboardViewController: UIInputViewController {
 
         configureBar(language: lang)
         rebuildKeys()
+
+        // El diccionario se carga en segundo plano: el teclado aparece al instante.
+        engine.whenReady { [weak self] in
+            self?.engineReady = true
+            self?.showNextWords()
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        previousWord = shouldAutoCapitalize() ? "<s>" : nil
         updateAutoShift()
+        showNextWords()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        engine.persistNow()
     }
 
     override func viewWillLayoutSubviews() {
@@ -111,8 +136,17 @@ final class KeyboardViewController: UIInputViewController {
                 }
             }
         } else {
-            updateAutoShift()
+            scheduleAutoShift()
         }
+    }
+
+    private func scheduleAutoShift() {
+        autoShiftWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.updateAutoShift()
+        }
+        autoShiftWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
     }
 
     // MARK: - Barra de sugerencias
@@ -128,7 +162,12 @@ final class KeyboardViewController: UIInputViewController {
         canvas.bar.languageButton.addGestureRecognizer(hold)
 
         canvas.bar.onSelect = { [weak self] index in
-            self?.selectCandidate(index)
+            guard let self = self else { return }
+            if self.slots.isEmpty {
+                self.selectNextWord(index)
+            } else {
+                self.selectCandidate(index)
+            }
         }
     }
 
@@ -142,9 +181,14 @@ final class KeyboardViewController: UIInputViewController {
     private func toggleLanguage() {
         commitComposition()
         let next: Language = (engine.language == Language.es) ? Language.en : Language.es
+        engineReady = false
         engine.setLanguage(next)
         UserDefaults.standard.set(next.rawValue, forKey: "language")
         canvas.bar.languageButton.setTitle(next == Language.es ? "ES" : "EN", for: .normal)
+        engine.whenReady { [weak self] in
+            self?.engineReady = true
+            self?.showNextWords()
+        }
     }
 
     // MARK: - Construccion de teclas
@@ -329,6 +373,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func switchLayer(_ target: Layer) {
+        doubleSpaceArmed = false
         commitComposition()
         activeLayer = target
         rebuildKeys()
@@ -365,6 +410,7 @@ final class KeyboardViewController: UIInputViewController {
     // MARK: - Palabra en curso
 
     private func pressKey(_ id: Character) {
+        doubleSpaceArmed = false
         beginWordIfNeeded()
         slots.append(Slot.key(id))
         refreshSuggestions()
@@ -372,6 +418,7 @@ final class KeyboardViewController: UIInputViewController {
 
     private func pressExplicit(_ text: String) {
         guard let c = text.lowercased().first else { return }
+        doubleSpaceArmed = false
         beginWordIfNeeded()
         slots.append(Slot.letter(c))
         refreshSuggestions()
@@ -390,8 +437,9 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func refreshSuggestions() {
-        suggestions = engine.suggest(slots)
+        suggestions = engine.suggest(slots, previous: previousWord, includeFuzzy: false)
         candidateIndex = 0
+        fuzzyComputed = false
         renderComposition()
     }
 
@@ -402,6 +450,10 @@ final class KeyboardViewController: UIInputViewController {
         return ""
     }
 
+    private func capitalizedFirst(_ word: String) -> String {
+        return word.prefix(1).uppercased() + String(word.dropFirst())
+    }
+
     private func applyCase(_ word: String) -> String {
         switch wordCase {
         case .off:
@@ -409,19 +461,69 @@ final class KeyboardViewController: UIInputViewController {
         case .locked:
             return word.uppercased()
         case .once:
-            return word.prefix(1).uppercased() + String(word.dropFirst())
+            return capitalizedFirst(word)
         }
     }
 
+    /// La barra se actualiza al instante. El campo de texto se actualiza solo cuando haces una pausa
+    /// (cada cambio en el campo es lo mas lento de todo el teclado).
     private func renderComposition() {
+        updateBar()
         if slots.isEmpty {
-            replaceInserted(with: "")
-            canvas.bar.update(candidates: [], current: 0)
+            flushWork?.cancel()
+            flushWork = nil
+            flushInline()
             return
         }
-        replaceInserted(with: applyCase(currentWord()))
-        let shown = suggestions.words.map { applyCase($0) }
+        scheduleIdleWork()
+    }
+
+    private func updateBar() {
+        if slots.isEmpty { return }
+        var shown: [String] = []
+        for w in suggestions.words {
+            shown.append(applyCase(w))
+        }
         canvas.bar.update(candidates: shown, current: candidateIndex)
+    }
+
+    private func scheduleIdleWork() {
+        flushWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.idleWork()
+        }
+        flushWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
+    }
+
+    private func idleWork() {
+        flushWork = nil
+        if slots.isEmpty { return }
+        extendWithFuzzy()
+        flushInline()
+    }
+
+    /// Calcula la autocorreccion (lo mas pesado del motor) solo cuando hay una pausa o se pide rotar.
+    private func extendWithFuzzy() {
+        if fuzzyComputed || slots.isEmpty { return }
+        fuzzyComputed = true
+        let full = engine.suggest(slots, previous: previousWord, includeFuzzy: true)
+        let head = Array(full.words.prefix(suggestions.words.count))
+        if candidateIndex == 0 || head == suggestions.words {
+            suggestions = full
+            if candidateIndex >= suggestions.words.count {
+                candidateIndex = 0
+            }
+            updateBar()
+        }
+    }
+
+    /// Deja en el campo la candidata actual.
+    private func flushInline() {
+        let target = slots.isEmpty ? "" : applyCase(currentWord())
+        if target != insertedText {
+            replaceInserted(with: target)
+        }
     }
 
     /// Cambia el texto de la palabra en curso tocando solo la parte que difiere.
@@ -446,23 +548,35 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func rotate() {
-        if slots.isEmpty || suggestions.words.count < 2 { return }
-        candidateIndex = (candidateIndex + 1) % suggestions.words.count
-        renderComposition()
+        if slots.isEmpty { return }
+        doubleSpaceArmed = false
+        flushWork?.cancel()
+        flushWork = nil
+        extendWithFuzzy()
+        if suggestions.words.count >= 2 {
+            candidateIndex = (candidateIndex + 1) % suggestions.words.count
+            updateBar()
+        }
+        flushInline()
     }
 
     private func selectCandidate(_ index: Int) {
         if slots.isEmpty || index < 0 || index >= suggestions.words.count { return }
         candidateIndex = index
-        renderComposition()
         commitComposition()
         textDocumentProxy.insertText(" ")
-        lastProxyOp = Date()
+        let now = Date()
+        lastProxyOp = now
+        lastSpaceTime = now
+        doubleSpaceArmed = true
     }
 
-    /// Da por terminada la palabra: la aprende y deja el texto como esta.
+    /// Da por terminada la palabra: la deja en el campo, la aprende y recuerda cual fue.
     private func commitComposition() {
         if slots.isEmpty { return }
+        flushWork?.cancel()
+        flushWork = nil
+        flushInline()
         var word = currentWord()
         var allExplicit = true
         for slot in slots {
@@ -472,55 +586,135 @@ final class KeyboardViewController: UIInputViewController {
         }
         let deliberate = suggestions.isLiteral && allExplicit
         if deliberate && wordCase == .once {
-            word = word.prefix(1).uppercased() + String(word.dropFirst())
+            word = capitalizedFirst(word)
         }
-        engine.learn(word, allowNew: deliberate)
+        engine.learn(word, previous: previousWord, allowNew: deliberate)
+        previousWord = word.lowercased()
         resetComposition()
     }
 
     private func resetComposition() {
+        flushWork?.cancel()
+        flushWork = nil
         slots.removeAll()
         suggestions = Suggestions(words: [], isLiteral: false)
         candidateIndex = 0
         insertedText = ""
         wordCase = .off
-        canvas.bar.update(candidates: [], current: 0)
+        fuzzyComputed = false
+        showNextWords()
     }
 
     /// Se usa cuando el cursor cambio de sitio por fuera del teclado: no se borra nada.
     private func cancelComposition() {
+        previousWord = nil
         resetComposition()
+    }
+
+    // MARK: - Siguiente palabra
+
+    private func caseForSuggestion(_ word: String) -> String {
+        switch shift {
+        case .off:
+            return word
+        case .locked:
+            return word.uppercased()
+        case .once:
+            return capitalizedFirst(word)
+        }
+    }
+
+    /// Entre palabras, la barra propone la palabra que suele venir despues.
+    private func showNextWords() {
+        if !slots.isEmpty || !engineReady { return }
+        nextWordsList = engine.nextWords(after: previousWord, limit: 4)
+        var shown: [String] = []
+        for w in nextWordsList {
+            shown.append(caseForSuggestion(w))
+        }
+        canvas.bar.update(candidates: shown, current: -1)
+    }
+
+    private func selectNextWord(_ index: Int) {
+        if !slots.isEmpty || index < 0 || index >= nextWordsList.count { return }
+        let word = nextWordsList[index]
+        let shown = caseForSuggestion(word)
+        if shift == .once {
+            shift = .off
+            refreshShiftAppearance()
+            refreshLetterTitles()
+        }
+        textDocumentProxy.insertText(shown + " ")
+        engine.learn(word, previous: previousWord, allowNew: false)
+        previousWord = word.lowercased()
+        let now = Date()
+        lastProxyOp = now
+        lastSpaceTime = now
+        doubleSpaceArmed = true
+        showNextWords()
     }
 
     // MARK: - Teclas de accion
 
     private func pressSpace() {
+        let wasComposing = !slots.isEmpty
         commitComposition()
+        let now = Date()
+        if !wasComposing && doubleSpaceArmed && now.timeIntervalSince(lastSpaceTime) < 0.6 {
+            // Doble espacio: el espacio pasa a ser punto y espacio
+            textDocumentProxy.deleteBackward()
+            textDocumentProxy.insertText(". ")
+            lastProxyOp = now
+            doubleSpaceArmed = false
+            previousWord = "<s>"
+            if activeLayer != .letters {
+                activeLayer = .letters
+                rebuildKeys()
+            }
+            if shift == .off {
+                shift = .once
+                refreshShiftAppearance()
+                refreshLetterTitles()
+            }
+            showNextWords()
+            return
+        }
         textDocumentProxy.insertText(" ")
-        lastProxyOp = Date()
+        lastProxyOp = now
+        lastSpaceTime = now
+        doubleSpaceArmed = wasComposing
         if activeLayer != .letters {
             activeLayer = .letters
             rebuildKeys()
         }
-        // La mayuscula automatica se calcula cuando el campo avisa del cambio de texto.
     }
 
     private func pressReturn() {
+        doubleSpaceArmed = false
         commitComposition()
         textDocumentProxy.insertText("\n")
         lastProxyOp = Date()
+        previousWord = "<s>"
+        showNextWords()
     }
 
     private func insertSymbol(_ s: String) {
+        doubleSpaceArmed = false
         commitComposition()
         textDocumentProxy.insertText(s)
         lastProxyOp = Date()
+        let endsSentence = (s == "." || s == "?" || s == "!" || s == "\u{00BF}" || s == "\u{00A1}")
+        previousWord = endsSentence ? "<s>" : nil
+        showNextWords()
     }
 
     private func pressBackspace() {
+        doubleSpaceArmed = false
         if !slots.isEmpty {
             slots.removeLast()
             if slots.isEmpty {
+                flushWork?.cancel()
+                flushWork = nil
                 replaceInserted(with: "")
                 resetComposition()
             } else {
@@ -529,6 +723,10 @@ final class KeyboardViewController: UIInputViewController {
         } else {
             textDocumentProxy.deleteBackward()
             lastProxyOp = Date()
+            if previousWord != nil {
+                previousWord = nil
+                showNextWords()
+            }
         }
     }
 
@@ -603,6 +801,7 @@ final class KeyboardViewController: UIInputViewController {
             }
             key.setTitle(parts.joined(separator: " "), for: .normal)
         }
+        showNextWords()
     }
 
     private func shouldAutoCapitalize() -> Bool {

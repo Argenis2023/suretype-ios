@@ -39,6 +39,8 @@ struct ContentView: View {
                         Text("Mantén pulsada una tecla para elegir una letra exacta: tildes, ü y ñ. Así también deletreas nombres nuevos, que el teclado aprende.")
                         Text("El botón ES/EN cambia el idioma. Mantenerlo 1,5 segundos borra las palabras aprendidas.")
                         Text("Mantén pulsado el punto para ver , ? ! ¿ ¡ y '.")
+                        Text("Entre palabras, la barra de arriba propone la palabra que suele venir después. Tócala para escribirla.")
+                        Text("Dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula.")
                     }
                     .font(.subheadline)
 
