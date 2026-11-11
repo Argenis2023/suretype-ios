@@ -361,19 +361,19 @@ final class KeyboardViewController: UIInputViewController {
         return b
     }
 
-    private func makeLetterKey(_ letter: Character) -> KeyButton {
+    private func makeLetterKey(_ letters: [Character]) -> KeyButton {
         let b = makeKey(title: nil, symbol: nil, kind: .letter)
-        b.keyId = letter
-        b.longPressOptions = KeyboardViewController.accents[letter] ?? []
-        b.addAction(UIAction { [weak self] _ in
-            self?.typeLetter(String(letter))
+        b.keyId = letters.first
+        b.letters = letters
+        b.addAction(UIAction { [weak self, weak b] _ in
+            guard let self = self, let b = b else { return }
+            let idx = b.letterIndex(forX: b.lastTouchX)
+            self.typeLetter(String(b.letters[idx]))
         }, for: .touchUpInside)
         b.onLongPressChoice = { [weak self] choice in
             self?.typeLetter(choice.lowercased())
         }
-        if !b.longPressOptions.isEmpty {
-            b.installLongPress(target: self, action: #selector(handleKeyLongPress(_:)))
-        }
+        b.installLongPress(target: self, action: #selector(handleKeyLongPress(_:)))
         letterKeys.append(b)
         return b
     }
@@ -432,15 +432,15 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func lettersRows() -> [[RowItem]] {
-        let row1: [Character] = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]
-        let row2: [Character] = ["a", "s", "d", "f", "g", "h", "j", "k", "l", "\u{00F1}"]
-        let row3: [Character] = ["z", "x", "c", "v", "b", "n", "m"]
+        let row1: [[Character]] = [["q", "w"], ["e", "r"], ["t", "y"], ["u", "i"], ["o", "p"]]
+        let row2: [[Character]] = [["a", "s"], ["d", "f"], ["g", "h"], ["j", "k"], ["l", "\u{00F1}"]]
+        let row3: [[Character]] = [["z", "x"], ["c", "v"], ["b", "n"], ["m"]]
 
         var r1: [RowItem] = []
-        for c in row1 { r1.append(RowItem(view: makeLetterKey(c), weight: 1.0)) }
+        for l in row1 { r1.append(RowItem(view: makeLetterKey(l), weight: 1.0)) }
 
         var r2: [RowItem] = []
-        for c in row2 { r2.append(RowItem(view: makeLetterKey(c), weight: 1.0)) }
+        for l in row2 { r2.append(RowItem(view: makeLetterKey(l), weight: 1.0)) }
 
         let shiftKey = makeKey(title: nil, symbol: "shift", kind: .function)
         shiftKey.addAction(UIAction { [weak self] _ in
@@ -449,7 +449,7 @@ final class KeyboardViewController: UIInputViewController {
         shiftButton = shiftKey
 
         var r3: [RowItem] = [RowItem(view: shiftKey, weight: 1.4)]
-        for c in row3 { r3.append(RowItem(view: makeLetterKey(c), weight: 1.0)) }
+        for l in row3 { r3.append(RowItem(view: makeLetterKey(l), weight: 1.0)) }
         r3.append(RowItem(view: makeBackspaceKey(), weight: 1.4))
 
         let comma = makeKey(title: ",", symbol: nil, kind: .letter)
@@ -525,10 +525,16 @@ final class KeyboardViewController: UIInputViewController {
         let location = gesture.location(in: canvas)
         switch gesture.state {
         case .began:
-            if key.longPressOptions.isEmpty { return }
+            var base = key.longPressOptions
+            if !key.letters.isEmpty {
+                let idx = key.letterIndex(forX: gesture.location(in: key).x)
+                let letter = key.letters[idx]
+                base = KeyboardViewController.accents[letter] ?? []
+            }
+            if base.isEmpty { return }
             popupStartX = location.x
             let upper = (shift != .off) && key.keyId != nil
-            let options = key.longPressOptions.map { upper ? $0.uppercased() : $0 }
+            let options = base.map { upper ? $0.uppercased() : $0 }
             canvas.showPopup(options: options, above: key)
         case .changed:
             canvas.popup.updateSelection(dx: location.x - popupStartX)
@@ -677,9 +683,8 @@ final class KeyboardViewController: UIInputViewController {
     private func refreshLetterTitles() {
         let upper = (shift != .off)
         for key in letterKeys {
-            guard let id = key.keyId else { continue }
-            let s = String(id)
-            key.setTitle(upper ? s.uppercased() : s, for: .normal)
+            let parts = key.letters.map { upper ? String($0).uppercased() : String($0) }
+            key.setTitle(parts.joined(separator: "  "), for: .normal)
         }
     }
 

@@ -29,6 +29,9 @@ final class KeyButton: UIButton {
         didSet { updateColors() }
     }
     var keyId: Character?
+    /// Letras de la tecla (SureType: dos por tecla). Mitad izquierda = primera, derecha = segunda.
+    var letters: [Character] = []
+    private(set) var lastTouchX: CGFloat = 0
     var longPressOptions: [String] = []
     var onLongPressChoice: ((String) -> Void)?
 
@@ -52,6 +55,17 @@ final class KeyButton: UIButton {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) no se usa")
+    }
+
+    override func beginTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
+        lastTouchX = touch.location(in: self).x
+        return super.beginTracking(touch, with: event)
+    }
+
+    /// Indice de la letra segun la mitad de la tecla donde esta el dedo
+    func letterIndex(forX x: CGFloat) -> Int {
+        if letters.count < 2 { return 0 }
+        return x >= bounds.midX ? 1 : 0
     }
 
     override var isHighlighted: Bool {

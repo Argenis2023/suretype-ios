@@ -39,11 +39,11 @@ struct ContentView: View {
                         .font(.headline)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Es un teclado QWERTY normal. Tú escribes cada palabra completa.")
+                        Text("Cada tecla tiene dos letras. Toca la mitad izquierda para la primera y la mitad derecha para la segunda. Tú escribes cada palabra completa.")
                         Text("Si una palabra está mal escrita, aparece en rojo en la barra de arriba con hasta tres correcciones. Toca una para reemplazarla.")
                         Text("Si la palabra en rojo sí es correcta (un nombre, por ejemplo), tócala a ella para guardarla y que no se marque más.")
                         Text("Dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula. También se pone mayúscula al empezar una frase.")
-                        Text("Mantén pulsada una vocal, la n o la c para elegir tilde, ü, ñ o ç. Mantén pulsado el punto para ver ? ! ¿ ¡ y '.")
+                        Text("Mantén pulsada la mitad de una tecla con vocal, n o c para elegir tilde, ü, ñ o ç. Mantén pulsado el punto para ver ? ! ¿ ¡ y '.")
                         Text("El botón ES/EN cambia el idioma del corrector. Mantenerlo 1,5 segundos borra las palabras guardadas.")
                     }
                     .font(.subheadline)

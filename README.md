@@ -4,16 +4,16 @@ Teclado personal estilo SureType (el de las BlackBerry): 2 letras por tecla y un
 
 ## Cómo funciona el teclado
 
-Teclado QWERTY normal con corrector ortográfico. No predice palabras: tú escribes y el teclado solo avisa si algo está mal.
+Teclado de estilo SureType (2 letras por tecla: QW · ER · TY · UI · OP / AS · DF · GH · JK · LÑ / ZX · CV · BN · M). No adivina palabras: tocas la **mitad izquierda** de la tecla para la primera letra y la **mitad derecha** para la segunda, y escribes la palabra completa. El teclado solo avisa si algo está mal.
 
 - **Corrector:** usa el corrector del propio iOS (UITextChecker), español e inglés. Si una palabra está mal escrita, aparece en rojo en la barra de arriba con hasta tres correcciones. Al tocar una, reemplaza la palabra. Si la palabra en rojo es correcta (un nombre), tócala para guardarla.
 - **Doble espacio:** dos toques rápidos al espacio ponen punto y espacio.
 - **Mayúsculas:** se activan solas al empezar un texto, después de punto, signo de interrogación o exclamación, y tras un salto de línea. Una pulsación para la siguiente letra, doble pulsación para bloquear.
-- **Tildes y ñ:** mantén pulsada una vocal, la n o la c y desliza para elegir (á, é, í, ó, ú, ü, ñ, ç). La ñ también tiene su propia tecla.
+- **Tildes y ñ:** mantén pulsada la mitad de una tecla con vocal, n o c y desliza para elegir (á, é, í, ó, ú, ü, ñ, ç).
 - **Números y símbolos:** tecla `123`, con una segunda página `#+=`. El punto, mantenido, ofrece `? ! ¿ ¡ '`.
 - **Idioma:** el botón ES/EN cambia el idioma del corrector. Mantenerlo 1,5 segundos borra las palabras guardadas.
 
-No pide "Acceso total", no usa internet y no envía nada a ningún lado. La versión anterior de 2 letras por tecla (estilo SureType) quedó guardada en la etiqueta `suretype-2-letras` del repositorio.
+No pide "Acceso total", no usa internet y no envía nada a ningún lado. La versión con predicción de palabras quedó guardada en la etiqueta `suretype-2-letras` del repositorio.
 
 ## Paso 1: subir el proyecto a GitHub
 
