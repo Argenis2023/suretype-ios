@@ -1,0 +1,48 @@
+name: Compilar IPA
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar XcodeGen
+        run: brew install xcodegen
+
+      - name: Generar el proyecto de Xcode
+        run: xcodegen generate
+
+      - name: Compilar sin firmar
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project SureType.xcodeproj \
+            -scheme SureType \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Empaquetar la IPA
+        run: |
+          APP="build/Build/Products/Release-iphoneos/SureType.app"
+          test -d "$APP/PlugIns/SureTypeKeyboard.appex" || (echo "Falta la extension del teclado dentro de la app" && exit 1)
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qry SureType.ipa Payload
+
+      - name: Subir la IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: SureType-ipa
+          path: SureType.ipa

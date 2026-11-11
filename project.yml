@@ -1,0 +1,41 @@
+name: SureType
+options:
+  bundleIdPrefix: com.personal
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    GENERATE_INFOPLIST_FILE: NO
+
+targets:
+  SureType:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.personal.suretype
+        PRODUCT_NAME: SureType
+        INFOPLIST_FILE: Config/App-Info.plist
+    dependencies:
+      - target: SureTypeKeyboard
+        embed: true
+
+  SureTypeKeyboard:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Keyboard
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.personal.suretype.keyboard
+        PRODUCT_NAME: SureTypeKeyboard
+        INFOPLIST_FILE: Config/Keyboard-Info.plist
+        SKIP_INSTALL: YES
