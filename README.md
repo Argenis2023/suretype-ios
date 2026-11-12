@@ -10,6 +10,10 @@ Teclado estilo SureType (2 letras por tecla: QW · ER · TY · UI · OP / AS · 
 - **Contexto:** la palabra anterior ayuda a elegir (por ejemplo entre "su" y "si").
 - **Candidatas:** la barra muestra la mejor opción resaltada y otras al lado. La tecla de flechas circulares rota entre ellas. Espacio acepta la resaltada.
 - **Diccionario:** español e inglés (unas 45.000 palabras cada uno), por frecuencia. El botón ES/EN cambia de idioma.
+- **Modelo espacial del toque:** si el dedo cae cerca del borde entre dos teclas, las dos se consideran al instante con un castigo por distancia (como Gboard y el XT9 original), sin esperar a la pausa de autocorrección.
+- **Revertir con borrar:** si el teclado puso una palabra corregida y no era lo que querías, un borrado inmediato devuelve tus letras tal cual y esa corrección pierde prioridad.
+- **Barra espaciadora como trackpad:** mantén el espacio y desliza para mover el cursor.
+- **Borrado acelerado:** mantén borrar y pasa de letras a palabras completas.
 - **Aprende:** como el SureType real, la última palabra que elegiste para una combinación de teclas pasa a ser la primera opción la próxima vez (corriges una vez y queda corregido). Las palabras que usas suben de prioridad y las nuevas (nombres) se aprenden si las deletreas con pulsación larga, letra por letra.
 - **Autocorrección:** si pulsas una tecla vecina por error, o dos teclas intercambiadas, las palabras que sí existen aparecen al final de la lista.
 - **Tildes y ñ:** mantén pulsada una tecla y desliza para elegir la letra exacta (a, á, s / u, ú, ü, i, í / l, ñ ...).

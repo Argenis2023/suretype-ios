@@ -39,8 +39,14 @@ final class KeyView: UIView {
 
     /// Acciones que conecta el controlador. `up` recibe true si el dedo termino sobre la tecla.
     var downAction: (() -> Void)?
+    /// Variante con el punto exacto del toque (coords del lienzo); si existe, se usa en vez de downAction.
+    var downActionAt: ((CGPoint) -> Void)?
     var upAction: ((Bool) -> Void)?
     var onLongPressChoice: ((String) -> Void)?
+    /// Modo deslizar (p. ej. barra espaciadora como trackpad): si estan puestos,
+    /// la pulsacion larga entra en modo deslizar en vez de abrir el globo de letras.
+    var onSlideBegin: (() -> Void)?
+    var onSlide: ((CGFloat) -> Void)?
 
     let label = UILabel()
     private let imageView = UIImageView()
@@ -287,6 +293,7 @@ final class KeyboardCanvas: UIView, UIInputViewAudioFeedback {
         let key: KeyView
         var longPressTimer: Timer?
         var popupShown = false
+        var slideActive = false
         var startX: CGFloat = 0
         init(key: KeyView) { self.key = key }
     }
@@ -374,8 +381,21 @@ final class KeyboardCanvas: UIView, UIInputViewAudioFeedback {
             touches[touch] = state
             k.isPressed = true
             UIDevice.current.playInputClick()
-            k.downAction?()
-            if !k.longPressOptions.isEmpty {
+            if let at = k.downActionAt {
+                at(point)
+            } else {
+                k.downAction?()
+            }
+            if k.onSlideBegin != nil {
+                let timer = Timer(timeInterval: 0.35, repeats: false) { [weak self, weak touch] _ in
+                    guard let self = self, let t = touch, let st = self.touches[t] else { return }
+                    st.slideActive = true
+                    st.startX = t.location(in: self).x
+                    st.key.onSlideBegin?()
+                }
+                RunLoop.main.add(timer, forMode: RunLoop.Mode.common)
+                state.longPressTimer = timer
+            } else if !k.longPressOptions.isEmpty {
                 let timer = Timer(timeInterval: 0.30, repeats: false) { [weak self, weak touch] _ in
                     guard let self = self, let t = touch, let st = self.touches[t] else { return }
                     st.popupShown = true
@@ -392,9 +412,11 @@ final class KeyboardCanvas: UIView, UIInputViewAudioFeedback {
     override func touchesMoved(_ touchSet: Set<UITouch>, with event: UIEvent?) {
         for touch in touchSet {
             guard let state = touches[touch] else { continue }
+            let x = touch.location(in: self).x
             if state.popupShown {
-                let x = touch.location(in: self).x
                 popup.updateSelection(dx: x - state.startX)
+            } else if state.slideActive {
+                state.key.onSlide?(x - state.startX)
             }
         }
     }
@@ -410,6 +432,8 @@ final class KeyboardCanvas: UIView, UIInputViewAudioFeedback {
                 if let c = choice {
                     state.key.onLongPressChoice?(c)
                 }
+            } else if state.slideActive {
+                // El deslizamiento ya hizo su trabajo; al soltar no pasa nada mas
             } else {
                 let inside = state.key.frame.contains(touch.location(in: self))
                 state.key.upAction?(inside)
@@ -424,7 +448,7 @@ final class KeyboardCanvas: UIView, UIInputViewAudioFeedback {
             state.key.isPressed = false
             if state.popupShown {
                 hidePopup()
-            } else {
+            } else if !state.slideActive {
                 state.key.upAction?(false)
             }
         }

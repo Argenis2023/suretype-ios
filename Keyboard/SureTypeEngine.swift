@@ -514,7 +514,12 @@ final class SureTypeEngine {
 
     // MARK: Prediccion de la palabra en curso
 
-    func suggest(_ slots: [Slot], previous: String?, includeFuzzy: Bool) -> Suggestions {
+    /// `touchAlternatives` viene del modelo espacial del toque: por cada pulsacion que cayo
+    /// cerca del borde entre dos teclas, la tecla vecina y un castigo segun la distancia
+    /// (como hacen Gboard y el XT9 con su "regional correction"). Se consideran las dos
+    /// teclas al instante, sin esperar a la pausa de autocorreccion.
+    func suggest(_ slots: [Slot], previous: String?, includeFuzzy: Bool,
+                 touchAlternatives: [Int: (key: Character, penalty: Float)] = [:]) -> Suggestions {
         if slots.isEmpty {
             return Suggestions(words: [], isLiteral: false)
         }
@@ -547,26 +552,44 @@ final class SureTypeEngine {
         let seqBytes = Array(seq.utf8)
         let seqLength = seqBytes.count
         let limit = 10
-        let mruWord = learnedBySeq[seq]
+
+        // Variantes de la secuencia segun donde cayo el dedo: la secuencia tal cual (castigo 0)
+        // y hasta 3 pulsaciones dudosas reemplazadas por su tecla vecina, con su castigo.
+        var variants: [(bytes: [UInt8], penalty: Float)] = [(seqBytes, 0)]
+        let uncertain = touchAlternatives.compactMap { (i, alt) -> (Int, UInt8, Float)? in
+            guard i >= 0 && i < slots.count, case Slot.key = slots[i], let b = alt.key.asciiValue else { return nil }
+            return (i, b, alt.penalty)
+        }.sorted { $0.2 < $1.2 }.prefix(3)
+        for (i, b, pen) in uncertain {
+            for (bytes, p) in variants where bytes[i] != b {
+                var v = bytes
+                v[i] = b
+                variants.append((v, p + pen))
+            }
+        }
 
         // 1) Diccionario: exactas (mismo largo) y completaciones (mas largas, con castigo por letra extra)
         var main: [Scored] = []
-        var i = d.dict.lowerBound(seqBytes)
-        while i < d.dict.count {
-            if !d.dict.seqHasPrefix(i, seqBytes) { break }
-            let idx = i
-            i += 1
-            let entryLen = d.dict.seqLength(idx)
-            let exact = entryLen == seqLength
-            var score = d.dict.freqs[idx] + (boosts[idx] ?? 0)
-            score += exact ? 4.0 : -0.7 * Float(entryLen - seqLength)
-            if main.count >= limit, let last = main.last, score + 8.0 <= last.score { continue }
-            let w = d.dict.word(idx)
-            if exact && w == mruWord { score += 8.0 }
-            if main.count >= limit, let last = main.last, score <= last.score { continue }
-            if !matches(w, explicit) { continue }
-            insert(Scored(text: w, score: score), into: &main, limit: limit)
+        for (vBytes, vPenalty) in variants {
+            let mruWord = learnedBySeq[String(decoding: vBytes, as: UTF8.self)]
+            var i = d.dict.lowerBound(vBytes)
+            while i < d.dict.count {
+                if !d.dict.seqHasPrefix(i, vBytes) { break }
+                let idx = i
+                i += 1
+                let entryLen = d.dict.seqLength(idx)
+                let exact = entryLen == seqLength
+                var score = d.dict.freqs[idx] + (boosts[idx] ?? 0) - vPenalty
+                score += exact ? 4.0 : -0.7 * Float(entryLen - seqLength)
+                if main.count >= limit, let last = main.last, score + 8.0 <= last.score { continue }
+                let w = d.dict.word(idx)
+                if exact && w == mruWord { score += 8.0 }
+                if main.count >= limit, let last = main.last, score <= last.score { continue }
+                if !matches(w, explicit) { continue }
+                insert(Scored(text: w, score: score), into: &main, limit: limit)
+            }
         }
+        let mruWord = learnedBySeq[seq]
 
         // 2) Palabras que encajan con la palabra anterior reciben un empujon
         if let prev = previous {
@@ -734,6 +757,40 @@ final class SureTypeEngine {
         if learnedBySeq.count > 5000 {
             // Se queda solo con las de palabras usadas mas de una vez
             learnedBySeq = learnedBySeq.filter { (learned[$0.value] ?? 0) > 1 }
+        }
+        schedulePersist()
+    }
+
+    /// Senal negativa: el usuario revirtio una autocorreccion de esta palabra
+    /// (asi entrena Gboard tambien). Baja su peso y deja de ser la primera de su secuencia.
+    func unlearn(_ word: String) {
+        let w = word.trimmingCharacters(in: CharacterSet.whitespaces)
+        if w.isEmpty { return }
+        if let c = learned[w] {
+            let newCount = c - 2
+            if newCount <= 0 {
+                learned.removeValue(forKey: w)
+            } else {
+                learned[w] = newCount
+            }
+        }
+        if let d = data, let i = d.dict.indexOf(word: w) {
+            if let c = learned[w] {
+                boosts[i] = SureTypeEngine.boostValue(c)
+            } else {
+                boosts.removeValue(forKey: i)
+            }
+        }
+        if let k = userOnly.firstIndex(where: { $0.word == w }) {
+            if let c = learned[w] {
+                userOnly[k].count = c
+            } else {
+                userOnly.remove(at: k)
+            }
+        }
+        let seq = KeyMap.keySequence(for: w)
+        if learnedBySeq[seq] == w {
+            learnedBySeq.removeValue(forKey: seq)
         }
         schedulePersist()
     }

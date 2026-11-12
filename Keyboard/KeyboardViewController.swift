@@ -50,6 +50,23 @@ final class KeyboardViewController: UIInputViewController {
     // Tecla pulsada al tocar (para deshacerla si luego se elige una letra exacta con pulsacion larga)
     private var lastTouchKey: Character?
 
+    // Modelo espacial del toque: por indice de pulsacion, la tecla vecina si el dedo cayo cerca del borde
+    private var touchAlts: [Int: (key: Character, penalty: Float)] = [:]
+
+    // Ultima palabra confirmada con espacio, para poder revertir la autocorreccion con borrar
+    private struct LastCommit {
+        let slots: [Slot]
+        let alts: [Int: (key: Character, penalty: Float)]
+        let text: String
+        let word: String
+        let savedCase: ShiftState
+        let time: Date
+    }
+    private var lastCommit: LastCommit?
+
+    // Barra espaciadora como trackpad (mantener y deslizar mueve el cursor)
+    private var trackpadChars = 0
+
     private var lastKind: LastKind = .other
     private var lastSpaceTime = Date.distantPast
     private var lastProxyOp = Date.distantPast
@@ -239,8 +256,10 @@ final class KeyboardViewController: UIInputViewController {
         k.keyId = id
         k.letters = Array(KeyMap.keyLetters[id] ?? "")
         k.longPressOptions = KeyMap.popupOptions[id] ?? []
-        k.downAction = { [weak self] in
-            self?.pressKey(id, fromTouch: true)
+        k.downActionAt = { [weak self, weak k] point in
+            guard let self = self else { return }
+            let alt = k.flatMap { self.touchAlternative(for: $0, at: point) }
+            self.pressKey(id, fromTouch: true, alternative: alt)
         }
         k.onLongPressChoice = { [weak self] choice in
             guard let self = self else { return }
@@ -278,8 +297,29 @@ final class KeyboardViewController: UIInputViewController {
         let k = KeyView(kind: .letter)
         k.setTitle("espacio")
         k.label.font = UIFont.systemFont(ofSize: 16)
-        k.downAction = { [weak self] in
-            self?.pressSpace()
+        // El espacio actua al soltar (como en el teclado de Apple), porque mantenerlo
+        // pulsado y deslizar mueve el cursor como un trackpad.
+        k.upAction = { [weak self] inside in
+            if inside { self?.pressSpace() }
+        }
+        k.onSlideBegin = { [weak self] in
+            guard let self = self else { return }
+            self.commitComposition()
+            self.trackpadChars = 0
+            self.lastKind = .other
+            self.lastCommit = nil
+        }
+        k.onSlide = { [weak self] dx in
+            guard let self = self else { return }
+            let step: CGFloat = 9
+            let target = Int((dx / step).rounded(.towardZero))
+            let delta = target - self.trackpadChars
+            if delta != 0 {
+                self.textDocumentProxy.adjustTextPosition(byCharacterOffset: delta)
+                self.trackpadChars = target
+                self.lastProxyOp = Date()
+                self.previousWord = nil
+            }
         }
         return k
     }
@@ -405,10 +445,36 @@ final class KeyboardViewController: UIInputViewController {
 
     // MARK: - Palabra en curso (barra + texto marcado)
 
-    private func pressKey(_ id: Character, fromTouch: Bool = false) {
+    /// Si el dedo cayo cerca del borde de otra tecla de letras, esa tecla tambien se considera,
+    /// con un castigo que crece con la distancia (modelo espacial, como Gboard).
+    private func touchAlternative(for key: KeyView, at point: CGPoint) -> (key: Character, penalty: Float)? {
+        var best: (key: Character, penalty: Float)?
+        let band = key.frame.width * 0.38
+        if band <= 0 { return nil }
+        for other in letterKeys where other !== key && !other.isHidden {
+            guard let oid = other.keyId else { continue }
+            let f = other.frame
+            let dx = max(f.minX - point.x, 0, point.x - f.maxX)
+            let dy = max(f.minY - point.y, 0, point.y - f.maxY)
+            let d = (dx * dx + dy * dy).squareRoot()
+            if d < band {
+                let penalty = Float(2.5 + 9.0 * Double(d / band))
+                if best == nil || penalty < best!.penalty {
+                    best = (key: oid, penalty: penalty)
+                }
+            }
+        }
+        return best
+    }
+
+    private func pressKey(_ id: Character, fromTouch: Bool = false, alternative: (key: Character, penalty: Float)? = nil) {
         lastKind = .other
         lastTouchKey = fromTouch ? id : nil
+        lastCommit = nil
         beginWordIfNeeded()
+        if let alt = alternative, alt.key != id {
+            touchAlts[slots.count] = alt
+        }
         slots.append(Slot.key(id))
         refreshSuggestions()
     }
@@ -418,6 +484,7 @@ final class KeyboardViewController: UIInputViewController {
         lastTouchKey = nil
         if slots.isEmpty { return }
         slots.removeLast()
+        touchAlts.removeValue(forKey: slots.count)
         if slots.isEmpty {
             let c = wordCase
             resetComposition(touchField: true)
@@ -433,6 +500,7 @@ final class KeyboardViewController: UIInputViewController {
         guard let c = text.lowercased().first else { return }
         lastKind = .other
         lastTouchKey = nil
+        lastCommit = nil
         beginWordIfNeeded()
         slots.append(Slot.letter(c))
         refreshSuggestions()
@@ -451,7 +519,7 @@ final class KeyboardViewController: UIInputViewController {
 
     /// Cada tecla actualiza la barra y el campo al instante (el calculo tarda decimas de milisegundo).
     private func refreshSuggestions() {
-        suggestions = engine.suggest(slots, previous: previousWord, includeFuzzy: false)
+        suggestions = engine.suggest(slots, previous: previousWord, includeFuzzy: false, touchAlternatives: touchAlts)
         candidateIndex = 0
         fuzzyComputed = false
         updateBar()
@@ -525,7 +593,7 @@ final class KeyboardViewController: UIInputViewController {
         if fuzzyComputed || slots.isEmpty { return }
         fuzzyComputed = true
         let wasLiteral = suggestions.isLiteral
-        let full = engine.suggest(slots, previous: previousWord, includeFuzzy: true)
+        let full = engine.suggest(slots, previous: previousWord, includeFuzzy: true, touchAlternatives: touchAlts)
         let head = Array(full.words.prefix(suggestions.words.count))
         if candidateIndex == 0 || head == suggestions.words {
             suggestions = full
@@ -559,6 +627,7 @@ final class KeyboardViewController: UIInputViewController {
         lastTouchKey = nil
         candidateIndex = index
         commitComposition(suffix: " ")
+        lastCommit = nil // la eligio el usuario a proposito, no hay nada que revertir
         let now = Date()
         lastSpaceTime = now
         lastKind = .spaceAfterWord
@@ -590,13 +659,36 @@ final class KeyboardViewController: UIInputViewController {
         if deliberate && wordCase == .once {
             word = capitalizedFirst(word)
         }
-        textDocumentProxy.insertText(applyCase(currentWord()) + suffix)
+        let inserted = applyCase(currentWord()) + suffix
+        textDocumentProxy.insertText(inserted)
         markedShown = ""
         lastProxyOp = Date()
         lastKind = .letter
+        // Si el teclado puso su primera candidata (no una elegida a mano) y no es lo tecleado
+        // tal cual, un borrado inmediato puede revertirla
+        if suffix == " " && !deliberate && candidateIndex == 0 && currentWord() != literalText(of: slots) {
+            lastCommit = LastCommit(slots: slots, alts: touchAlts, text: inserted,
+                                    word: word, savedCase: wordCase, time: Date())
+        } else {
+            lastCommit = nil
+        }
         engine.learn(word, previous: previousWord, allowNew: deliberate)
         previousWord = word.lowercased()
         resetComposition(touchField: false)
+    }
+
+    /// Las letras tal cual se teclearon (primera letra de cada tecla, mas las elegidas a mano).
+    private func literalText(of slots: [Slot]) -> String {
+        var out = ""
+        for slot in slots {
+            switch slot {
+            case .key(let id):
+                out.append(KeyMap.keyLetters[id]?.first ?? "?")
+            case .letter(let c):
+                out.append(c)
+            }
+        }
+        return out
     }
 
     private func resetComposition(touchField: Bool) {
@@ -609,6 +701,7 @@ final class KeyboardViewController: UIInputViewController {
         }
         markedShown = ""
         slots.removeAll()
+        touchAlts = [:]
         suggestions = Suggestions(words: [], isLiteral: false)
         candidateIndex = 0
         wordCase = .off
@@ -686,10 +779,11 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func pressBackspace() {
-        lastKind = .other
         lastTouchKey = nil
         if !slots.isEmpty {
+            lastKind = .other
             slots.removeLast()
+            touchAlts.removeValue(forKey: slots.count)
             if slots.isEmpty {
                 resetComposition(touchField: true)
             } else {
@@ -697,19 +791,89 @@ final class KeyboardViewController: UIInputViewController {
             }
             return
         }
+        // Borrar justo despues de una autocorreccion la revierte: vuelven las letras
+        // tal cual se teclearon (como en el teclado de Apple) y la correccion pierde peso.
+        if let lc = lastCommit, lastKind == .spaceAfterWord,
+           Date().timeIntervalSince(lc.time) < 3.0 {
+            lastCommit = nil
+            for _ in 0..<lc.text.count {
+                textDocumentProxy.deleteBackward()
+            }
+            lastProxyOp = Date()
+            lastKind = .other
+            engine.unlearn(lc.word)
+            slots = lc.slots
+            touchAlts = lc.alts
+            wordCase = lc.savedCase
+            refreshSuggestions()
+            let literal = literalText(of: lc.slots)
+            if let i = suggestions.words.firstIndex(of: literal) {
+                candidateIndex = i
+                updateBar()
+                flushMarked()
+            }
+            return
+        }
+        lastKind = .other
+        lastCommit = nil
         textDocumentProxy.deleteBackward()
         lastProxyOp = Date()
         previousWord = nil
         scheduleAutoShift()
     }
 
+    /// Mantener borrar acelera: primero letra por letra y luego palabra por palabra (como Apple).
+    private func deleteWordBackward() {
+        if !slots.isEmpty {
+            resetComposition(touchField: true)
+            return
+        }
+        let context = textDocumentProxy.documentContextBeforeInput ?? ""
+        if context.isEmpty {
+            backspaceUp()
+            textDocumentProxy.deleteBackward()
+            return
+        }
+        var count = 0
+        var seenWord = false
+        for ch in context.reversed() {
+            if ch == " " || ch == "\n" {
+                if seenWord { break }
+            } else {
+                seenWord = true
+            }
+            count += 1
+            if count >= 40 { break }
+        }
+        for _ in 0..<max(count, 1) {
+            textDocumentProxy.deleteBackward()
+        }
+        lastProxyOp = Date()
+        previousWord = nil
+    }
+
     private func backspaceDown() {
         pressBackspace()
         backspaceUp()
+        lastCommit = nil
         let delay = Timer(timeInterval: 0.45, repeats: false) { [weak self] _ in
             guard let self = self else { return }
-            let repeater = Timer(timeInterval: 0.07, repeats: true) { [weak self] _ in
-                self?.pressBackspace()
+            var repeats = 0
+            let repeater = Timer(timeInterval: 0.07, repeats: true) { [weak self] t in
+                guard let self = self else { return }
+                repeats += 1
+                if repeats > 14 {
+                    // Pasa a borrar por palabras
+                    t.invalidate()
+                    let wordRepeater = Timer(timeInterval: 0.22, repeats: true) { [weak self] _ in
+                        self?.deleteWordBackward()
+                    }
+                    RunLoop.main.add(wordRepeater, forMode: RunLoop.Mode.common)
+                    self.backspaceRepeatTimer = wordRepeater
+                    self.deleteWordBackward()
+                    return
+                }
+                self.pressBackspace()
             }
             RunLoop.main.add(repeater, forMode: RunLoop.Mode.common)
             self.backspaceRepeatTimer = repeater
