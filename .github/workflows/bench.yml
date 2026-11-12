@@ -1,0 +1,14 @@
+name: Banco de pruebas del motor
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bench:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar y ejecutar
+        run: |
+          swiftc -O Keyboard/SureTypeEngine.swift tools/bench/main.swift -o bench
+          ./bench Keyboard/Resources tools/bench/es_test.txt tools/bench/en_test.txt
