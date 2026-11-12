@@ -6,7 +6,8 @@ Teclado personal estilo SureType (el de las BlackBerry): 2 letras por tecla y un
 
 Teclado estilo SureType (2 letras por tecla: QW · ER · TY · UI · OP / AS · DF · GH · JK · LÑ / ZX · CV · BN · M). Pulsas cada tecla una vez por letra y el teclado adivina la palabra que estás escribiendo. No propone la palabra siguiente.
 
-- **Rápido:** mientras escribes, la palabra en curso solo aparece en la barra de arriba. Se escribe en el campo una sola vez, al dar espacio o al tocar una candidata.
+- **Rápido:** la palabra en curso se ve subrayada en el campo y se actualiza con una sola llamada, después de una pausa de una décima de segundo. Las teclas responden al tocar, no al soltar. El cálculo de cada pulsación toma menos de una décima de milisegundo (banco de pruebas en `tools/bench`).
+- **Contexto:** la palabra anterior ayuda a elegir (por ejemplo entre "su" y "si"), y las palabras que eliges suben de prioridad.
 - **Candidatas:** la barra muestra la mejor opción resaltada y otras al lado. La tecla de flechas circulares rota entre ellas. Espacio acepta la resaltada.
 - **Diccionario:** español e inglés (unas 45.000 palabras cada uno), por frecuencia. El botón ES/EN cambia de idioma.
 - **Aprende:** las palabras que eliges suben de prioridad. Las palabras nuevas (nombres) se aprenden si las deletreas con pulsación larga, letra por letra.
@@ -62,6 +63,10 @@ Con una cuenta Apple gratuita la firma dura 7 días. Cuando el teclado deje de a
 ## Cambiar o ampliar el diccionario
 
 Edita `tools/build_dictionaries.py` (listas `ES_EXTRA` y `EN_EXTRA` para agregar palabras con una frecuencia), ejecuta `python tools/build_dictionaries.py --preview` y vuelve a subir los cambios. Con eso se regeneran `Keyboard/Resources/dict_es.txt` y `dict_en.txt`. Si cambias la distribución de teclas hay que cambiarla igual en `KEY_LETTERS` (Python) y en `KeyMap` (`Keyboard/SureTypeEngine.swift`).
+
+## Banco de pruebas del motor
+
+En Actions, el flujo "Banco de pruebas del motor" (ejecución manual) compila el motor de predicción solo y mide cuánto tarda cada pulsación y cuántas veces acierta la primera candidata con 2.000 palabras de prueba por idioma.
 
 ## Limitaciones conocidas
 

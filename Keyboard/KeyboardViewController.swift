@@ -42,6 +42,16 @@ final class KeyboardViewController: UIInputViewController {
     private var fuzzyComputed = false
     private var idleWork: DispatchWorkItem?
 
+    // Contexto: palabra anterior ("<s>" = inicio de frase, nil = desconocida)
+    private var previousWord: String? = "<s>"
+
+    // Texto marcado: la palabra en curso se ve en el campo (subrayada) y se actualiza con una sola llamada
+    private var markedShown = ""
+    private var markedWork: DispatchWorkItem?
+
+    // Tecla pulsada al tocar (para deshacerla si luego se elige una letra exacta con pulsacion larga)
+    private var lastTouchKey: Character?
+
     private var lastKind: LastKind = .other
     private var lastSpaceTime = Date.distantPast
     private var lastProxyOp = Date.distantPast
@@ -76,7 +86,7 @@ final class KeyboardViewController: UIInputViewController {
             canvas.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
 
-        let h = view.heightAnchor.constraint(equalToConstant: 262)
+        let h = view.heightAnchor.constraint(equalToConstant: 268)
         h.priority = UILayoutPriority(999)
         h.isActive = true
         heightConstraint = h
@@ -93,7 +103,19 @@ final class KeyboardViewController: UIInputViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         lastKind = .other
+        previousWord = shouldAutoCapitalize() ? "<s>" : nil
         updateAutoShift()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // iOS retrasa los toques cerca del borde inferior (gesto del sistema): se pide que no lo haga
+        if let recognizers = view.window?.gestureRecognizers {
+            for r in recognizers {
+                r.delaysTouchesBegan = false
+                r.delaysTouchesEnded = false
+            }
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -105,7 +127,7 @@ final class KeyboardViewController: UIInputViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         let compact = traitCollection.verticalSizeClass == .compact
-        let target: CGFloat = compact ? 200 : 262
+        let target: CGFloat = compact ? 200 : 268
         if let c = heightConstraint, c.constant != target {
             c.constant = target
         }
@@ -130,9 +152,19 @@ final class KeyboardViewController: UIInputViewController {
 
     /// Los cambios que hace este mismo teclado no se revisan (leer el campo en cada letra era lo que lo hacia lento).
     private func handleContextChange() {
-        if Date().timeIntervalSince(lastProxyOp) < 0.35 { return }
+        if Date().timeIntervalSince(lastProxyOp) < 0.5 { return }
         lastKind = .other
-        if slots.isEmpty { scheduleAutoShift() }
+        if slots.isEmpty {
+            previousWord = nil
+            scheduleAutoShift()
+        } else {
+            // Si el cursor se movio por fuera del teclado, se abandona la palabra en curso sin tocar el texto
+            let context = textDocumentProxy.documentContextBeforeInput ?? ""
+            if !context.hasSuffix(markedShown) {
+                resetComposition(touchField: false)
+                previousWord = nil
+            }
+        }
     }
 
     // MARK: - Barra de candidatas
@@ -212,8 +244,8 @@ final class KeyboardViewController: UIInputViewController {
         b.letters = Array(KeyMap.keyLetters[id] ?? "")
         b.longPressOptions = KeyMap.popupOptions[id] ?? []
         b.addAction(UIAction { [weak self] _ in
-            self?.pressKey(id)
-        }, for: .touchUpInside)
+            self?.pressKey(id, fromTouch: true)
+        }, for: .touchDown)
         b.onLongPressChoice = { [weak self] choice in
             self?.pressExplicit(choice)
         }
@@ -380,6 +412,9 @@ final class KeyboardViewController: UIInputViewController {
             let choice = canvas.popup.selectedOption
             canvas.hidePopup()
             if let c = choice {
+                if let id = key.keyId, lastTouchKey == id {
+                    undoTentativeKey()
+                }
                 key.onLongPressChoice?(c)
             }
         default:
@@ -389,16 +424,34 @@ final class KeyboardViewController: UIInputViewController {
 
     // MARK: - Palabra en curso (solo en la barra)
 
-    private func pressKey(_ id: Character) {
+    private func pressKey(_ id: Character, fromTouch: Bool = false) {
         lastKind = .other
+        lastTouchKey = fromTouch ? id : nil
         beginWordIfNeeded()
         slots.append(Slot.key(id))
         refreshSuggestions()
     }
 
+    /// La tecla ya se habia anotado al tocar; si era una pulsacion larga, se quita para poner la letra exacta.
+    private func undoTentativeKey() {
+        lastTouchKey = nil
+        if slots.isEmpty { return }
+        slots.removeLast()
+        if slots.isEmpty {
+            let c = wordCase
+            resetComposition(touchField: true)
+            if c == .once {
+                shift = .once
+                refreshShiftAppearance()
+                refreshLetterTitles()
+            }
+        }
+    }
+
     private func pressExplicit(_ text: String) {
         guard let c = text.lowercased().first else { return }
         lastKind = .other
+        lastTouchKey = nil
         beginWordIfNeeded()
         slots.append(Slot.letter(c))
         refreshSuggestions()
@@ -416,11 +469,39 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func refreshSuggestions() {
-        suggestions = engine.suggest(slots, previous: nil, includeFuzzy: false)
+        suggestions = engine.suggest(slots, previous: previousWord, includeFuzzy: false)
         candidateIndex = 0
         fuzzyComputed = false
         updateBar()
+        scheduleMarked(delay: 0.12)
         scheduleIdleWork()
+    }
+
+    // MARK: - Texto marcado (la palabra se ve en el campo)
+
+    private func scheduleMarked(delay: TimeInterval) {
+        markedWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.flushMarked()
+        }
+        markedWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    /// Deja en el campo la candidata actual, con una sola llamada.
+    private func flushMarked() {
+        markedWork?.cancel()
+        markedWork = nil
+        let target = slots.isEmpty ? "" : applyCase(currentWord())
+        if target == markedShown { return }
+        if target.isEmpty {
+            textDocumentProxy.setMarkedText("", selectedRange: NSRange(location: 0, length: 0))
+            textDocumentProxy.unmarkText()
+        } else {
+            textDocumentProxy.setMarkedText(target, selectedRange: NSRange(location: (target as NSString).length, length: 0))
+        }
+        markedShown = target
+        lastProxyOp = Date()
     }
 
     private func capitalizedFirst(_ word: String) -> String {
@@ -471,7 +552,7 @@ final class KeyboardViewController: UIInputViewController {
         idleWork = nil
         if fuzzyComputed || slots.isEmpty { return }
         fuzzyComputed = true
-        let full = engine.suggest(slots, previous: nil, includeFuzzy: true)
+        let full = engine.suggest(slots, previous: previousWord, includeFuzzy: true)
         let head = Array(full.words.prefix(suggestions.words.count))
         if candidateIndex == 0 || head == suggestions.words {
             suggestions = full
@@ -479,22 +560,26 @@ final class KeyboardViewController: UIInputViewController {
                 candidateIndex = 0
             }
             updateBar()
+            flushMarked()
         }
     }
 
     private func rotate() {
         if slots.isEmpty { return }
         lastKind = .other
+        lastTouchKey = nil
         idleWork?.cancel()
         extendWithFuzzy()
         if suggestions.words.count >= 2 {
             candidateIndex = (candidateIndex + 1) % suggestions.words.count
             updateBar()
         }
+        flushMarked()
     }
 
     private func selectCandidate(_ index: Int) {
         if slots.isEmpty || index < 0 || index >= suggestions.words.count { return }
+        lastTouchKey = nil
         candidateIndex = index
         commitComposition()
         textDocumentProxy.insertText(" ")
@@ -505,7 +590,7 @@ final class KeyboardViewController: UIInputViewController {
         scheduleAutoShift()
     }
 
-    /// Escribe la palabra en el campo (una sola vez), la aprende y deja la barra vacia.
+    /// Fija la palabra en el campo, la aprende y deja la barra vacia.
     private func commitComposition() {
         if slots.isEmpty { return }
         idleWork?.cancel()
@@ -521,16 +606,27 @@ final class KeyboardViewController: UIInputViewController {
         if deliberate && wordCase == .once {
             word = capitalizedFirst(word)
         }
-        textDocumentProxy.insertText(applyCase(word))
+        flushMarked()
+        textDocumentProxy.unmarkText()
+        markedShown = ""
         lastProxyOp = Date()
         lastKind = .letter
-        engine.learn(word, previous: nil, allowNew: deliberate)
-        resetComposition()
+        engine.learn(word, previous: previousWord, allowNew: deliberate)
+        previousWord = word.lowercased()
+        resetComposition(touchField: false)
     }
 
-    private func resetComposition() {
+    private func resetComposition(touchField: Bool) {
         idleWork?.cancel()
         idleWork = nil
+        markedWork?.cancel()
+        markedWork = nil
+        if touchField && !markedShown.isEmpty {
+            textDocumentProxy.setMarkedText("", selectedRange: NSRange(location: 0, length: 0))
+            textDocumentProxy.unmarkText()
+            lastProxyOp = Date()
+        }
+        markedShown = ""
         slots.removeAll()
         suggestions = Suggestions(words: [], isLiteral: false)
         candidateIndex = 0
@@ -545,6 +641,7 @@ final class KeyboardViewController: UIInputViewController {
         let wasComposing = !slots.isEmpty
         commitComposition()
         let now = Date()
+        lastTouchKey = nil
         if !wasComposing && lastKind == .spaceAfterWord && now.timeIntervalSince(lastSpaceTime) < 0.7 {
             // Doble espacio: el espacio pasa a ser punto y espacio
             textDocumentProxy.deleteBackward()
@@ -552,6 +649,7 @@ final class KeyboardViewController: UIInputViewController {
             lastProxyOp = now
             lastSpaceTime = now
             lastKind = .spaceOther
+            previousWord = "<s>"
             if activeLayer != .letters {
                 activeLayer = .letters
                 rebuildKeys()
@@ -576,26 +674,32 @@ final class KeyboardViewController: UIInputViewController {
 
     private func pressReturn() {
         commitComposition()
+        lastTouchKey = nil
         textDocumentProxy.insertText("\n")
         lastProxyOp = Date()
         lastKind = .other
+        previousWord = "<s>"
         scheduleAutoShift()
     }
 
     private func insertSymbol(_ s: String) {
         commitComposition()
+        lastTouchKey = nil
         textDocumentProxy.insertText(s)
         lastProxyOp = Date()
         lastKind = (s.first?.isNumber ?? false) ? .letter : .other
+        let endsSentence = (s == "." || s == "?" || s == "!" || s == "\u{00BF}" || s == "\u{00A1}")
+        previousWord = endsSentence ? "<s>" : nil
         scheduleAutoShift()
     }
 
     private func pressBackspace() {
         lastKind = .other
+        lastTouchKey = nil
         if !slots.isEmpty {
             slots.removeLast()
             if slots.isEmpty {
-                resetComposition()
+                resetComposition(touchField: true)
             } else {
                 refreshSuggestions()
             }
@@ -603,6 +707,7 @@ final class KeyboardViewController: UIInputViewController {
         }
         textDocumentProxy.deleteBackward()
         lastProxyOp = Date()
+        previousWord = nil
         scheduleAutoShift()
     }
 
@@ -635,6 +740,7 @@ final class KeyboardViewController: UIInputViewController {
             // En medio de una palabra: alterna entre Mayuscula inicial y minuscula
             wordCase = (wordCase == .off) ? ShiftState.once : ShiftState.off
             updateBar()
+            scheduleMarked(delay: 0.05)
             return
         }
         let now = Date()
@@ -702,6 +808,7 @@ final class KeyboardViewController: UIInputViewController {
         autoShiftWork = nil
         if activeLayer != .letters || shift == .locked || !slots.isEmpty { return }
         let want = shouldAutoCapitalize()
+        if want { previousWord = "<s>" }
         if want && shift == .off {
             shift = .once
             refreshShiftAppearance()

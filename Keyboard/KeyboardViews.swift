@@ -57,6 +57,12 @@ final class KeyButton: UIButton {
         fatalError("init(coder:) no se usa")
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Sin camino de sombra, iOS recalcula la sombra de cada tecla en cada toque (lento)
+        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: layer.cornerRadius).cgPath
+    }
+
     override func beginTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
         lastTouchX = touch.location(in: self).x
         return super.beginTracking(touch, with: event)
@@ -299,7 +305,7 @@ final class KeyboardCanvas: UIView {
         let hGap: CGFloat = 5
         let vGap: CGFloat = 6
         let top = barHeight + 2
-        let bottomMargin: CGFloat = 4
+        let bottomMargin: CGFloat = 8
         let rowHeight = (bounds.height - top - bottomMargin - vGap * CGFloat(rowCount - 1)) / CGFloat(rowCount)
 
         for (r, row) in rows.enumerated() {

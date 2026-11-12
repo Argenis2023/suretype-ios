@@ -33,7 +33,7 @@ struct ContentView: View {
                         .font(.headline)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Pulsa cada tecla una vez por letra. El teclado adivina la palabra y la muestra en la barra de arriba.")
+                        Text("Pulsa cada tecla una vez por letra. El teclado adivina la palabra, la muestra subrayada en el campo y propone otras opciones en la barra de arriba.")
                         Text("Espacio acepta la palabra resaltada. La tecla con las flechas circulares cambia a otra candidata, y también puedes tocar una en la barra.")
                         Text("Mantén pulsada una tecla para elegir una letra exacta: tildes, ü y ñ. Así también deletreas nombres nuevos, que el teclado aprende.")
                         Text("Dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula. También se pone mayúscula al empezar una frase.")

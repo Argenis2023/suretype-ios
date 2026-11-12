@@ -262,7 +262,7 @@ final class SureTypeEngine {
     }
 
     private static func boostValue(_ count: Int) -> Float {
-        return 2.0 * Float(log(Double(count) + 1.0))
+        return 3.0 * Float(log(Double(count) + 1.0))
     }
 
     private static func loadData(language: Language, bundle: Bundle) -> LanguageData {

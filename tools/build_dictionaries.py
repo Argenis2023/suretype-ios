@@ -85,7 +85,18 @@ def clean(words: dict, lang: str, other: dict) -> dict:
         if c < 150_000 and oc > 5 * c:
             continue
         out[w] = c
+    if lang == "es":
+        # Formas con tilde mal escritas en los subtitulos ("vámos", "díme", "cúando"):
+        # se descartan si su version sin tilde existe y es mucho mas frecuente.
+        for w in list(out):
+            plain = fold_accents(w)
+            if plain != w and plain in out and out[w] < 0.03 * out[plain]:
+                del out[w]
     return out
+
+
+def fold_accents(w: str) -> str:
+    return w.translate(str.maketrans("áéíóúü", "aeiouu"))
 
 
 ES_EXTRA = {

@@ -48,6 +48,7 @@ AABABAA	sábanas	4156
 AABABAA	sabanas	485
 AABABDO	sanando	301
 AABABDUJA	sabandija	361
+AABACEUTO	sánscrito	202
 AABACUOB	sanación	283
 AABADO	sábado	16462
 AABADO	sabado	662
@@ -90,8 +91,6 @@ AABDUAA	sandías	295
 AABE	sabe	273895
 AABEA	sabes	636739
 AABEA	sabrá	12265
-AABEA	sabés	3085
-AABEA	sábes	547
 AABEA	sabra	435
 AABEAA	sabrás	7468
 AABEAA	sabras	255
@@ -151,7 +150,6 @@ AABLE	sable	1221
 AABLEA	sables	302
 AABO	sano	7241
 AABO	asno	1118
-AABO	sanó	209
 AABOA	sanos	1908
 AABOA	asnos	234
 AABOE	sabor	9060
@@ -886,6 +884,7 @@ AAUATADOA	asustados	2600
 AAUATADUZO	asustadizo	206
 AAUATAE	asustar	3219
 AAUATAEA	asustará	342
+AAUATAEA	asustara	202
 AAUATAEAE	asustarse	617
 AAUATAEBOA	asustarnos	646
 AAUATAELA	asustarla	792
@@ -1028,6 +1027,7 @@ ABAD	abad	1073
 ABADUA	abadía	881
 ABADULACTUCO	anafiláctico	203
 ABAEABJADO	anaranjado	297
+ABAEBTA	absenta	202
 ABAECA	abarca	446
 ABAECAE	abarcar	214
 ABAEEOTADO	abarrotado	384
@@ -1059,6 +1059,7 @@ ABALUTUCA	analítica	435
 ABALUZA	analiza	568
 ABALUZABDO	analizando	1322
 ABALUZADO	analizado	958
+ABALUZADOE	analizador	201
 ABALUZAE	analizar	2990
 ABALUZAELO	analizarlo	435
 ABALUZAMOA	analizamos	463
@@ -1089,6 +1090,7 @@ ABATUBEBCUA	abstinencia	1155
 ABATUDA	abatida	279
 ABATUDO	abatido	1249
 ABATUDOA	abatidos	276
+ABATUE	abatir	202
 ABAUA	ansia	693
 ABAUA	ansía	311
 ABAUAA	ansias	1103
@@ -1143,7 +1145,6 @@ ABCUABAA	ancianas	713
 ABCUABO	anciano	6487
 ABCUABOA	ancianos	5049
 ABDA	anda	37779
-ABDA	andá	1005
 ABDAA	andas	4122
 ABDAB	andan	3354
 ABDABA	andaba	3293
@@ -1416,6 +1417,7 @@ ABOQBOAED	snowboard	401
 ABOQDEB	snowden	312
 ABOTA	anota	1816
 ABOTAATE	anotaste	332
+ABOTAB	anotan	202
 ABOTABDO	anotando	346
 ABOTACUOB	anotación	930
 ABOTACUOBEA	anotaciones	598
@@ -1496,6 +1498,7 @@ ABTUCUADOA	anticuados	355
 ABTUCUAEUO	anticuario	274
 ABTUCUCUO	antivicio	388
 ABTUCUEEOOA	anticuerpos	559
+ABTUCUOABDO	anticipando	202
 ABTUCUOACUOB	anticipación	865
 ABTUCUOADA	anticipada	407
 ABTUCUOADO	anticipado	797
@@ -1605,6 +1608,7 @@ ABULACUOB	anulación	1152
 ABULADA	anulada	231
 ABULADO	anulado	720
 ABULAE	anular	1736
+ABULAELO	anularlo	201
 ABULE	anule	286
 ABULEBE	abilene	310
 ABULLO	anillo	23113
@@ -1629,6 +1633,7 @@ ABUMAELA	animarla	276
 ABUMAELO	animarlo	296
 ABUMAEME	animarme	585
 ABUMAETE	animarte	690
+ABUMAEUA	animaría	202
 ABUMAL	animal	19868
 ABUMALEA	animales	26546
 ABUMALUTO	animalito	266
@@ -2165,6 +2170,7 @@ ACOOLAMUEBTO	acoplamiento	360
 ACOOTEE	scooter	938
 ACOT	scot	267
 ACOTT	scott	16331
+ACOTTADALE	scottsdale	202
 ACOTTT	scotty	3666
 ACOTTUE	scottie	717
 ACOUT	scout	1680
@@ -2478,7 +2484,6 @@ ADELABTAEOB	adelantaron	212
 ADELABTAMOA	adelantamos	229
 ADELABTATE	adelántate	549
 ADELABTE	adelante	113192
-ADELABTE	adelanté	367
 ADELABTEA	adelantes	209
 ADELABTEMOA	adelantemos	225
 ADELABTO	adelanto	2272
@@ -2583,6 +2588,7 @@ ADMUTA	admita	726
 ADMUTAA	admitas	373
 ADMUTAB	admitan	223
 ADMUTALO	admítalo	218
+ADMUTAMOALO	admitámoslo	201
 ADMUTE	admite	2942
 ADMUTEA	admites	1293
 ADMUTEB	admiten	790
@@ -2734,6 +2740,7 @@ ADULTO	adulto	7693
 ADULTOA	adultos	9230
 ADULUACUOB	afiliación	262
 ADULUADO	afiliado	261
+ADULUADOA	afiliados	202
 ADUOA	adiós	143677
 ADUOA	adios	9921
 ADUOAUTO	adiosito	311
@@ -2746,6 +2753,7 @@ AEA	sra	5687
 AEA	ara	255
 AEAA	seas	54799
 AEAA	aras	933
+AEAA	sras	202
 AEAAMO	sésamo	693
 AEAB	sean	43979
 AEABDABO	arándano	587
@@ -3419,6 +3427,7 @@ AEEUUBAEA	arruinará	1099
 AEEUUBAEA	arruinara	368
 AEEUUBAEAA	arruinarás	542
 AEEUUBAEAB	arruinarán	228
+AEEUUBAEBOA	arruinarnos	201
 AEEUUBAEE	arruinaré	386
 AEEUUBAELA	arruinarla	209
 AEEUUBAELE	arruinarle	307
@@ -3436,6 +3445,7 @@ AEEUUBO	arruinó	3810
 AEEUUBO	arruino	656
 AEG	seh	437
 AEG	seg	314
+AEGADOE	segador	201
 AEGEBTEAM	argenteam	239
 AEGEBTUBA	argentina	2214
 AEGEBTUBO	argentino	523
@@ -3490,6 +3500,7 @@ AEGUUEAA	seguirás	2297
 AEGUUEAB	seguirán	2838
 AEGUUEBOA	seguirnos	691
 AEGUUEE	seguiré	7115
+AEGUUEE	seguire	202
 AEGUUEEMOA	seguiremos	5574
 AEGUUELA	seguirla	960
 AEGUUELE	seguirle	1188
@@ -3995,6 +4006,7 @@ AGEEGAA	agregas	294
 AGEEGABDO	agregando	256
 AGEEGADO	agregado	913
 AGEEGAE	agregar	2528
+AGEEGAEE	agregaré	202
 AGEEGAELE	agregarle	277
 AGEEGAMOA	agregamos	288
 AGEEGO	agregó	398
@@ -4292,6 +4304,7 @@ ALADA	añada	346
 ALADE	añade	1298
 ALADE	slade	1106
 ALADEA	añades	308
+ALADEB	añaden	202
 ALADO	añado	297
 ALADO	alado	262
 ALADU	añadí	294
@@ -4502,7 +4515,6 @@ ALEGEE	alegré	506
 ALEGEEA	alegres	1865
 ALEGEEMEBTE	alegremente	765
 ALEGEO	alegro	37403
-ALEGEO	alegró	822
 ALEGEUA	alegría	14160
 ALEGEUA	alegria	547
 ALEGEUAA	alegrías	885
@@ -4560,7 +4572,6 @@ ALEMABUA	alemania	12440
 ALETA	aleta	585
 ALETAA	aletas	729
 ALEZ	alex	26535
-ALEZ	álex	348
 ALEZA	alexa	593
 ALEZABDEA	alexandra	1178
 ALEZABDEE	alexander	4320
@@ -4584,8 +4595,6 @@ ALGUBAA	algunas	96075
 ALGUBO	alguno	22317
 ALGUBOA	algunos	105052
 ALGUUEB	alguien	447141
-ALGUUEB	alguién	1678
-ALGUUEB	álguien	245
 ALLA	allá	102642
 ALLA	alla	4318
 ALLAB	allan	1718
@@ -4636,6 +4645,7 @@ ALMOGADULLAA	almohadillas	212
 ALMUDOB	almidón	275
 ALMUEABTAZGO	almirantazgo	351
 ALMUEABTE	almirante	5762
+ALMUEEZA	almuerza	202
 ALMUEEZO	almuerzo	17854
 ALMUEEZOA	almuerzos	810
 ALO	año	128910
@@ -4737,6 +4747,7 @@ ALUADOA	aliados	4535
 ALUAGA	alisha	307
 ALUAOB	alison	4467
 ALUATADO	alistado	303
+ALUATAE	alistar	202
 ALUATAEAE	alistarse	356
 ALUATAEME	alistarme	348
 ALUATAUE	alistair	772
@@ -4745,6 +4756,7 @@ ALUATO	alistó	331
 ALUAUOB	alusión	237
 ALUBA	alina	466
 ALUBE	aline	313
+ALUBEA	alinea	201
 ALUBEAB	alinean	235
 ALUBEACUOB	alineación	794
 ALUBEADAA	alineadas	241
@@ -4963,7 +4975,6 @@ AMELUE	amélie	256
 AMETEALLADOEA	ametralladora	1407
 AMETEALLADOEAA	ametralladoras	1136
 AMO	amo	83156
-AMO	amó	1523
 AMOA	amos	3001
 AMOAEE	ampare	224
 AMOAEO	amparo	682
@@ -5074,6 +5085,7 @@ AOAEECEB	aparecen	3850
 AOAEECEE	aparecer	8597
 AOAEECEEA	aparecerá	2555
 AOAEECEEAB	aparecerán	528
+AOAEECEEAE	aparecerse	202
 AOAEECEEUA	aparecería	479
 AOAEECEEUAA	aparecerías	220
 AOAEECEMOA	aparecemos	211
@@ -5118,7 +5130,6 @@ AOAETAOA	apartaos	1052
 AOAETATE	apártate	4454
 AOAETATE	apartate	286
 AOAETE	aparte	14807
-AOAETE	aparté	341
 AOAETEA	apartes	484
 AOAETEAE	apártese	1481
 AOAETEB	aparten	311
@@ -5229,6 +5240,7 @@ AOBAE	sonar	8293
 AOBAEA	sonará	1047
 AOBAEA	sonara	520
 AOBAEUA	sonaría	318
+AOBAJEEO	sonajero	202
 AOBAMBULA	sonámbula	312
 AOBAMBULO	sonámbulo	530
 AOBATA	sonata	359
@@ -5510,6 +5522,7 @@ AOEETOB	apretón	1426
 AOEETUEA	apertura	3522
 AOEEUTUCO	aperitivo	1596
 AOEEUTUCOA	aperitivos	1438
+AOEGADA	apegada	202
 AOEGADO	apegado	434
 AOEGO	apego	532
 AOELABDO	apelando	220
@@ -5648,7 +5661,6 @@ AOJJA	sokka	271
 AOJU	soju	260
 AOL	sol	45567
 AOLA	sola	82229
-AOLA	sóla	563
 AOLAA	solas	14326
 AOLAATA	aplasta	686
 AOLAATAB	aplastan	206
@@ -5686,7 +5698,6 @@ AOLAEEA	solares	1208
 AOLAEUA	soñaría	259
 AOLAEUA	solaris	205
 AOLAMEBTE	solamente	23166
-AOLAMEBTE	sólamente	368
 AOLAMOA	soñamos	583
 AOLAOA	solapa	368
 AOLATUCUO	solsticio	495
@@ -5725,7 +5736,6 @@ AOLO	sólo	741588
 AOLO	solo	590343
 AOLO	soñó	661
 AOLOA	solos	20664
-AOLOA	sólos	236
 AOLOMOB	solomon	1160
 AOLOMULLO	solomillo	238
 AOLTAATE	soltaste	283
@@ -6084,7 +6094,6 @@ AQUEL	aquel	27160
 AQUEL	aquél	2979
 AQUELAEEE	aquelarre	619
 AQUELLA	aquella	20688
-AQUELLA	aquélla	409
 AQUELLAA	aquellas	4020
 AQUELLO	aquello	10940
 AQUELLOA	aquellos	20238
@@ -6199,7 +6208,6 @@ ATAMOA	atamos	281
 ATAMOEE	stamper	224
 ATAOLETOB	stapleton	230
 ATAQUE	ataque	39782
-ATAQUE	ataqué	388
 ATAQUEA	ataques	8174
 ATAQUEB	ataquen	1911
 ATAQUEMOA	ataquemos	376
@@ -6340,6 +6348,7 @@ ATEBDUDOA	atendidos	254
 ATEBDUEBDO	atendiendo	1155
 ATEBDUO	atendió	698
 ATEBEA	atenea	606
+ATEBEEAE	atenerse	202
 ATEBTA	atenta	1098
 ATEBTADO	atentado	2099
 ATEBTADOA	atentados	537
@@ -6456,6 +6465,7 @@ ATEUCJLABD	strickland	485
 ATEUDEL	strudel	212
 ATEUGOU	strigoi	203
 ATEUJEE	striker	222
+ATEUO	atrio	201
 ATEUOOEE	stripper	1532
 ATEUOOEEA	strippers	888
 ATEUOTEAAE	striptease	1188
@@ -6859,6 +6869,7 @@ AUBTUEEAA	sintieras	777
 AUBTUEEAB	sintieran	222
 AUBTUEEOB	sintieron	862
 AUBTUO	sintió	6590
+AUBTUO	sintio	201
 AUBTUTLE	subtitle	1196
 AUBTUTULADA	subtitulada	559
 AUBTUTULADO	subtitulado	1751
@@ -7128,6 +7139,7 @@ AUEGUE	surgir	1036
 AUEGUEA	surgirá	284
 AUEGUEBDO	surgiendo	362
 AUEGUEEOB	surgieron	662
+AUEGUMUEBTO	surgimiento	201
 AUEGUO	surgió	3154
 AUEJA	surja	422
 AUELA	sueña	2211
@@ -7307,10 +7319,10 @@ AUJETALO	sujétalo	936
 AUJETAME	sujétame	272
 AUJETATE	sujétate	1318
 AUJETE	sujete	439
+AUJETEB	sujeten	201
 AUJETEBAE	sujétense	593
 AUJETEBLO	sujétenlo	254
 AUJETO	sujeto	14500
-AUJETO	sujetó	224
 AUJETOA	sujetos	3422
 AUJU	suki	317
 AUL	sil	344
@@ -8363,7 +8375,6 @@ BAULAEUBAA	bailarinas	1454
 BAULAEUBEA	bailarines	1460
 BAULAMOA	bailamos	2030
 BAULE	baile	34771
-BAULE	bailé	487
 BAULEA	bailes	2440
 BAULEA	baúles	287
 BAULEB	bailen	738
@@ -8451,6 +8462,7 @@ BEACJEB	bracken	240
 BEACJETT	brackett	273
 BEACO	bravo	14048
 BEACOA	bravos	366
+BEACUA	beavis	202
 BEACUCOB	bravucón	318
 BEAD	brad	7826
 BEADAGAQ	bradshaw	720
@@ -8567,6 +8579,7 @@ BEBEDUCUAEAE	beneficiarse	458
 BEBEDUCUAEUA	beneficiaría	336
 BEBEDUCUAEUA	beneficiaria	214
 BEBEDUCUAEUO	beneficiario	428
+BEBEDUCUE	beneficie	201
 BEBEDUCUO	beneficio	6166
 BEBEDUCUOA	beneficios	6214
 BEBEDUCUOAA	beneficiosa	219
@@ -8639,7 +8652,6 @@ BECEAUDAD	necesidad	18452
 BECEAUDADEA	necesidades	5833
 BECEAUTA	necesita	105889
 BECEAUTAA	necesitas	85706
-BECEAUTAA	necesitás	206
 BECEAUTAAE	necesitase	223
 BECEAUTAATE	necesitaste	375
 BECEAUTAB	necesitan	32121
@@ -8681,7 +8693,6 @@ BECEAUTEB	necesiten	1951
 BECEAUTEMOA	necesitemos	1803
 BECEAUTEUA	necesitéis	243
 BECEAUTO	necesito	237654
-BECEAUTO	necesitó	1159
 BECEEA	nevera	3794
 BECEEEO	becerro	336
 BECEELT	beverly	4050
@@ -8827,7 +8838,6 @@ BEGOCUADOE	negociador	689
 BEGOCUAE	negociar	5829
 BEGOCUAMOA	negociamos	390
 BEGOCUO	negocio	49896
-BEGOCUO	negoció	249
 BEGOCUOA	negocios	39553
 BEGUE	negué	964
 BEJA	beka	884
@@ -9338,6 +9348,7 @@ BOEEAL	boreal	243
 BOEEATE	noreste	1405
 BOEEE	borré	415
 BOEEE	borre	408
+BOEEELL	norrell	202
 BOEEO	borró	1009
 BOEEO	borro	228
 BOEEOAA	borrosa	855
@@ -9412,12 +9423,14 @@ BOLETAA	boletas	211
 BOLETO	boleto	5091
 BOLETOA	boletos	4596
 BOLETUB	boletín	1508
+BOLETUBEA	boletines	202
 BOLLO	bollo	1106
 BOLLOA	bollos	1391
 BOLLTQOOD	bollywood	383
 BOLO	bolo	576
 BOLOA	bolos	2720
 BOLOBUA	bolonia	431
+BOLOLEAA	boloñesa	201
 BOLTOB	bolton	811
 BOLU	boli	754
 BOLUB	bolin	293
@@ -9461,7 +9474,6 @@ BOMBEAELO	nombrarlo	245
 BOMBEAEOB	nombraron	538
 BOMBEAMUEBTO	nombramiento	825
 BOMBEE	nombre	222406
-BOMBEE	nombré	253
 BOMBEEA	nombres	24706
 BOMBEEO	bombero	2556
 BOMBEEOA	bomberos	5953
@@ -9759,6 +9771,7 @@ BUCAL	bucal	577
 BUCEABDO	buceando	244
 BUCEAE	bucear	841
 BUCEL	nivel	29519
+BUCELADO	nivelado	202
 BUCELEA	niveles	6392
 BUCEO	buceo	1223
 BUCEOA	bíceps	440
@@ -9835,7 +9848,6 @@ BUEATEO	nuestro	254046
 BUEATEOA	nuestros	114018
 BUEB	bien	2045290
 BUEB	buen	224802
-BUEB	bién	3316
 BUEBA	buena	238330
 BUEBA	burns	3074
 BUEBAA	buenas	151571
@@ -10104,7 +10116,6 @@ BUZZ	buzz	2506
 CA	va	535397
 CAA	vas	327127
 CAA	cas	525
-CAA	vás	261
 CAAA	casa	587832
 CAAA	cass	2036
 CAAAA	casas	20193
@@ -10237,7 +10248,6 @@ CAATULLO	castillo	13685
 CAATULLOA	castillos	935
 CAATULUAB	castilian	253
 CAAU	casi	133614
-CAAU	casí	300
 CAAUAL	casual	2025
 CAAUALEA	casuales	268
 CAAUALMEBTE	casualmente	1331
@@ -10742,7 +10752,6 @@ CAEGAMEBTO	cargamento	2898
 CAEGAMEBTOA	cargamentos	295
 CAEGAMOA	cargamos	538
 CAEGO	cargo	35050
-CAEGO	cargó	959
 CAEGOA	cargos	14856
 CAEGUE	cargue	815
 CAEGUE	cargué	542
@@ -11206,6 +11215,7 @@ CAMBEUDGE	cambridge	1594
 CAMBOTA	camboya	675
 CAMBUA	cambia	18593
 CAMBUAA	cambias	3242
+CAMBUAAE	cambiase	202
 CAMBUAATE	cambiaste	3281
 CAMBUAB	cambian	6118
 CAMBUABA	cambiaba	872
@@ -11259,7 +11269,6 @@ CAMELLOA	camellos	1172
 CAMELOT	camelot	1368
 CAMMT	cammy	231
 CAMOA	vamos	1049315
-CAMOA	vámos	815
 CAMOABA	campana	5521
 CAMOABAA	campanas	3454
 CAMOABADAA	campanadas	431
@@ -11329,7 +11338,6 @@ CAMUBEA	camines	462
 CAMUBEB	caminen	948
 CAMUBEMOA	caminemos	655
 CAMUBO	camino	140092
-CAMUBO	caminó	1053
 CAMUBOA	caminos	7380
 CAMUDLADO	camuflado	245
 CAMUDLAJE	camuflaje	1122
@@ -11410,6 +11418,7 @@ CAOTUEADO	capturado	4133
 CAOTUEADOA	capturados	1228
 CAOTUEAE	capturar	3505
 CAOTUEAELO	capturarlo	543
+CAOTUEAELOA	capturarlos	202
 CAOTUEAEOB	capturaron	1028
 CAOTUEAMOA	capturamos	706
 CAOTUEE	capturé	249
@@ -11514,7 +11523,6 @@ CAU	cai	328
 CAU	vai	249
 CAUA	vais	13512
 CAUA	caía	2352
-CAUA	váis	352
 CAUAA	causa	33279
 CAUAA	caías	211
 CAUAAA	causas	3042
@@ -11612,7 +11620,6 @@ CCE	cce	309
 CE	ve	179427
 CEA	ves	133094
 CEA	vea	27885
-CEA	vés	202
 CEAA	veas	10262
 CEAA	cesa	297
 CEAADO	cesado	361
@@ -12082,12 +12089,9 @@ CEEDUTOA	créditos	2028
 CEEDUTOA	cerditos	417
 CEEE	cree	95859
 CEEE	veré	33305
-CEEE	creé	1517
 CEEE	vere	1081
 CEEE	veer	734
 CEEEA	crees	225748
-CEEEA	creés	483
-CEEEA	crées	298
 CEEEAATE	cerraste	849
 CEEEABA	cerraba	577
 CEEEABDO	cerrando	2966
@@ -12140,6 +12144,7 @@ CEEEEBOA	creernos	217
 CEEEEE	creeré	1006
 CEEEELA	creerla	286
 CEEEELE	creerle	1497
+CEEEELEA	creerles	201
 CEEEELO	creerlo	18393
 CEEEEME	creerme	4932
 CEEEEMELO	creérmelo	375
@@ -12199,7 +12204,6 @@ CEEMOAO	cremoso	305
 CEEMOBT	vermont	1224
 CEEO	creo	651433
 CEEO	cero	14296
-CEEO	creó	6324
 CEEOA	veros	2642
 CEEOA	ceros	840
 CEEOBA	verona	502
@@ -12243,6 +12247,7 @@ CEEU	crei	1356
 CEEUA	creía	34319
 CEEUA	vería	5428
 CEEUA	creia	763
+CEEUA	veria	201
 CEEUAA	creías	4474
 CEEUAA	verías	1258
 CEEUAB	creían	2797
@@ -12405,7 +12410,6 @@ CEOULLO	cepillo	3547
 CEOULLOA	cepillos	578
 CETA	veta	536
 CETE	vete	93782
-CETE	véte	372
 CETEEABA	veterana	222
 CETEEABO	veterano	2013
 CETEEABOA	veteranos	2289
@@ -12506,7 +12510,6 @@ CEUJUEBTE	crujiente	1134
 CEUJUEBTEA	crujientes	413
 CEUMEA	crimea	307
 CEUMEB	crimen	36579
-CEUMEB	crímen	336
 CEUMEBEA	crímenes	9290
 CEUMEBEA	crimenes	455
 CEUMUBAL	criminal	15863
@@ -12937,7 +12940,6 @@ CLACAEE	clavaré	207
 CLACAELE	clavarle	270
 CLACAEOB	clavaron	223
 CLACE	clave	14049
-CLACE	clavé	342
 CLACEA	claves	1264
 CLACEL	clavel	326
 CLACELEA	claveles	375
@@ -12979,6 +12981,7 @@ CLAUATEODOBUA	claustrofobia	455
 CLAUATEODOBUCO	claustrofóbico	287
 CLAUAUEA	clausura	319
 CLAUAULA	cláusula	1139
+CLAUAULAA	cláusulas	202
 CLAUDE	claude	2907
 CLAUDETTE	claudette	413
 CLAUDUA	claudia	4446
@@ -13241,6 +13244,7 @@ COBATEEBADO	consternado	265
 COBATELACUOB	constelación	663
 COBATELACUOBEA	constelaciones	356
 COBATEUCCUOB	construcción	8203
+COBATEUCCUOB	construccion	201
 COBATEUCCUOBEA	construcciones	945
 COBATEUCTOE	constructor	1117
 COBATEUCTOEA	constructora	508
@@ -13489,6 +13493,7 @@ COBCEEAACUOBEA	conversaciones	4658
 COBCEEAADOE	conversador	285
 COBCEEAAE	conversar	4005
 COBCEEAAMOA	conversamos	580
+COBCEEAEMOA	conversemos	202
 COBCEEAUOB	conversión	852
 COBCEEBUEBTE	concerniente	394
 COBCEEGEBCUA	convergencia	259
@@ -13578,6 +13583,7 @@ COBCUEEBEB	conciernen	297
 COBCUEEDA	concuerda	2248
 COBCUEEDAB	concuerdan	994
 COBCUEEDO	concuerdo	755
+COBCUEEEBCUA	concurrencia	202
 COBCUEETA	convierta	3078
 COBCUEETAA	conviertas	1034
 COBCUEETAB	conviertan	675
@@ -13662,6 +13668,7 @@ COBDETU	confeti	298
 COBDLUCTO	conflicto	5455
 COBDLUCTOA	conflictos	1792
 COBDOB	condón	2579
+COBDOB	condon	202
 COBDOBEA	condones	2572
 COBDOE	cóndor	311
 COBDOEMA	conforma	279
@@ -13881,6 +13888,7 @@ COBEZUOBEA	conexiones	3348
 COBG	cong	288
 COBGA	conga	307
 COBGEATUOB	congestión	247
+COBGEBUAMOA	congeniamos	202
 COBGEEAO	congreso	6219
 COBGEEAUATA	congresista	3013
 COBGEEAUATAA	congresistas	393
@@ -13932,7 +13940,6 @@ COBOA	conos	437
 COBOACO	conosco	303
 COBOCE	conoce	47688
 COBOCEA	conoces	58941
-COBOCEA	conocés	256
 COBOCEB	conocen	14670
 COBOCEDOE	conocedor	312
 COBOCEE	conocer	35058
@@ -14110,6 +14117,7 @@ COBTEAE	contrae	347
 COBTEAEE	contraer	665
 COBTEAEEEATAE	contrarrestar	476
 COBTEAEUA	contraria	1240
+COBTEAEUADO	contrariado	202
 COBTEAEUAMEBTE	contrariamente	250
 COBTEAEUO	contrario	23421
 COBTEAEUOA	contrarios	228
@@ -14652,6 +14660,7 @@ COGEEAB	cogerán	557
 COGEEAE	cogerse	319
 COGEEBOA	cogernos	211
 COGEEE	cogeré	3770
+COGEEEBCUA	coherencia	202
 COGEEEBTE	coherente	770
 COGEEEMOA	cogeremos	1420
 COGEELA	cogerla	1130
@@ -14819,7 +14828,6 @@ COLCUO	volvió	28609
 COLCUO	volvio	821
 COLE	cole	8642
 COLE	volé	932
-COLE	colé	250
 COLEA	coles	781
 COLEABDO	coleando	501
 COLEATEEOL	colesterol	965
@@ -14900,6 +14908,7 @@ COLOAO	coloso	317
 COLOB	colón	1040
 COLOB	colon	1002
 COLOBBA	colonna	212
+COLOBO	colono	202
 COLOBOA	colonos	1250
 COLOBUA	colonia	5447
 COLOBUAA	colonias	1734
@@ -15400,7 +15409,6 @@ COMOLETADO	completado	1843
 COMOLETAE	completar	3683
 COMOLETAMEBTE	completamente	45342
 COMOLETO	completo	28715
-COMOLETO	completó	442
 COMOLETOA	completos	1670
 COMOLEZUOB	complexión	424
 COMOLOT	complot	1386
@@ -15710,7 +15718,6 @@ CU	vi	119856
 CUA	cia	10451
 CUA	vía	8800
 CUA	via	1228
-CUA	cía	293
 CUAA	vías	3878
 CUAA	visa	1565
 CUAAA	visas	311
@@ -15721,7 +15728,6 @@ CUAB	cuán	10324
 CUAB	cuan	3337
 CUABDO	cuando	931329
 CUABDO	cuándo	106920
-CUABDO	cúando	275
 CUABE	cisne	1491
 CUABEA	cisnes	683
 CUABLE	viable	1079
@@ -15732,7 +15738,6 @@ CUABTAA	cuántas	23906
 CUABTAA	cuantas	11570
 CUABTO	cuánto	123138
 CUABTO	cuanto	71197
-CUABTO	cúanto	331
 CUABTOA	cuántos	33572
 CUABTOA	cuantos	12760
 CUABTUCA	cuántica	1202
@@ -15792,7 +15797,6 @@ CUAJAEEMOA	viajaremos	500
 CUAJAEOB	viajaron	468
 CUAJAMOA	viajamos	1289
 CUAJE	viaje	62667
-CUAJE	viajé	788
 CUAJEA	viajes	7860
 CUAJEB	viajen	366
 CUAJECUTO	viajecito	349
@@ -15804,7 +15808,6 @@ CUAJO	viajó	1364
 CUAJOEDABUA	cisjordania	205
 CUAL	cuál	136406
 CUAL	cual	62288
-CUAL	cúal	948
 CUAL	vial	380
 CUALEA	cuáles	13461
 CUALEA	cuales	9005
@@ -17115,7 +17118,6 @@ DALDAA	faldas	1331
 DALDEEO	faldero	421
 DALE	dale	37876
 DALE	dañe	354
-DALE	dále	230
 DALEA	dales	2504
 DALEJ	dalek	1175
 DALEJA	daleks	920
@@ -17153,7 +17155,6 @@ DALLUDA	fallida	344
 DALLUDO	fallido	708
 DALLUDOA	fallidos	258
 DALO	daño	55599
-DALO	dañó	852
 DALO	dalo	625
 DALOA	daños	8221
 DALT	daly	1094
@@ -17176,6 +17177,7 @@ DALTAEUA	faltaría	693
 DALTE	falte	1053
 DALTE	falté	273
 DALTEA	faltes	323
+DALTEB	falten	202
 DALTO	faltó	1562
 DALTO	falto	649
 DALTOB	dalton	1875
@@ -17189,7 +17191,6 @@ DAMA	fama	6060
 DAMAA	damas	23894
 DAMAACO	damasco	678
 DAME	dame	87200
-DAME	dáme	495
 DAMELA	dámela	3256
 DAMELAA	dámelas	590
 DAMELO	dámelo	7062
@@ -17207,7 +17208,6 @@ DAMUAB	damián	320
 DAMUAELA	damisela	455
 DAMUEB	damien	2434
 DAMULUA	familia	177748
-DAMULUA	família	521
 DAMULUAA	familias	14336
 DAMULUAE	familiar	21678
 DAMULUAEEA	familiares	8443
@@ -17577,6 +17577,7 @@ DEACEUTA	descrita	206
 DEACEUTO	descrito	1046
 DEACO	draco	308
 DEACOB	deacon	1287
+DEACOBAUDEEADA	desconsiderada	201
 DEACOBAUDEEADO	desconsiderado	554
 DEACOBCEETABTE	desconcertante	939
 DEACOBCEETADA	desconcertada	297
@@ -17683,6 +17684,7 @@ DEACUUDADO	descuidado	2209
 DEACUUDADOA	descuidados	404
 DEACUUDAE	descuidar	224
 DEACUUDE	descuide	939
+DEACUUDEB	descuiden	202
 DEACUUDO	descuido	1060
 DEADACGATEZ	desfachatez	205
 DEADE	desde	303620
@@ -17781,7 +17783,6 @@ DEAEMOLEADO	desempleado	961
 DEAEMOLEADOA	desempleados	522
 DEAEMOLEO	desempleo	1136
 DEAEO	deseo	38627
-DEAEO	deseó	383
 DEAEOA	deseos	11083
 DEAEOAO	deseoso	384
 DEAEOAOA	deseosos	206
@@ -17838,6 +17839,7 @@ DEAGOB	dragón	8387
 DEAGOBEA	dragones	3222
 DEAGOBEA	deshonra	1073
 DEAGOBEADO	deshonrado	656
+DEAGOBEAE	deshonrar	202
 DEAGOBEATA	deshonesta	299
 DEAGOBEATO	deshonesto	941
 DEAGOBEATOA	deshonestos	236
@@ -18065,7 +18067,6 @@ DEAOUDUEEOB	despidieron	2970
 DEAOUDUO	despidió	2311
 DEAOUEA	después	311500
 DEAOUEA	despues	13357
-DEAOUEA	despúes	380
 DEAOUEETA	despierta	25791
 DEAOUEETAA	despiertas	1746
 DEAOUEETAB	despiertan	725
@@ -18767,6 +18768,7 @@ DEEEAME	derramé	414
 DEEEAMEA	derrames	373
 DEEEAMO	derramó	863
 DEEEBGU	ferengi	458
+DEEEBO	freebo	202
 DEEECGA	derecha	37262
 DEEECGAA	derechas	436
 DEEECGAZO	derechazo	269
@@ -18886,8 +18888,6 @@ DEGOLLADO	degollado	228
 DEGUATACUOB	degustación	358
 DEGUATAE	degustar	211
 DEJA	deja	120259
-DEJA	dejá	429
-DEJA	déja	256
 DEJAA	dejas	23660
 DEJAAE	dejase	819
 DEJAAEA	dejases	277
@@ -19105,7 +19105,6 @@ DELUTOA	delitos	4058
 DELUZ	feliz	125692
 DELUZ	felix	3614
 DELUZ	félix	2642
-DELUZ	felíz	859
 DELUZMEBTE	felizmente	2123
 DEM	dem	516
 DEMA	fema	314
@@ -19286,6 +19285,7 @@ DEOGAEAE	drogarse	482
 DEOGAEME	drogarme	345
 DEOGAEOB	drogaron	379
 DEOGAETE	drogarte	310
+DEOGATA	drogata	202
 DEOGO	drogó	619
 DEOGO	drogo	352
 DEOJ	deok	416
@@ -19356,6 +19356,7 @@ DETEBDEE	detendré	1552
 DETEBDEEMOA	detendremos	1068
 DETEBDEUA	detendría	677
 DETEBED	detened	273
+DETEBEDLE	detenedle	202
 DETEBEE	detener	16498
 DETEBEEAE	detenerse	2062
 DETEBEEBOA	detenernos	1950
@@ -19664,7 +19665,6 @@ DOBCELLAA	doncellas	785
 DOBDA	fonda	389
 DOBDE	dónde	539643
 DOBDE	donde	277524
-DOBDE	dondé	228
 DOBDEQUUEEA	dondequiera	2430
 DOBDO	fondo	31017
 DOBDOA	fondos	9444
@@ -19686,7 +19686,6 @@ DOBLAE	doblar	2223
 DOBLAJE	doblaje	213
 DOBLAMOA	doblamos	224
 DOBLE	doble	26787
-DOBLE	doblé	216
 DOBLEA	dobles	2351
 DOBLEB	doblen	212
 DOBLEGAE	doblegar	206
@@ -19961,6 +19960,7 @@ DOMUBACUOB	dominación	764
 DOMUBADA	dominada	364
 DOMUBADO	dominado	1124
 DOMUBAE	dominar	2613
+DOMUBAELO	dominarlo	202
 DOMUBE	domine	394
 DOMUBGO	domingo	16770
 DOMUBGOA	domingos	3648
@@ -20124,7 +20124,6 @@ DUACULOAMOA	disculpamos	249
 DUACULOATE	discúlpate	1199
 DUACULOAUA	disculpáis	451
 DUACULOE	disculpe	50520
-DUACULOE	disculpé	477
 DUACULOEA	disculpes	1554
 DUACULOEB	disculpen	12923
 DUACULOEBBOA	discúlpennos	325
@@ -20379,6 +20378,7 @@ DUATEACCUOB	distracción	3847
 DUATEACCUOBEA	distracciones	1078
 DUATEAE	distrae	818
 DUATEAEA	distraes	260
+DUATEAEB	distraen	201
 DUATEAEE	distraer	1001
 DUATEAEEAE	distraerse	264
 DUATEAEEBOA	distraernos	252
@@ -20455,6 +20455,7 @@ DUAULEA	fusiles	628
 DUAULEEOA	fusileros	220
 DUAUMULA	disimula	309
 DUAUMULAE	disimular	650
+DUAUOA	disipa	202
 DUAUOAE	disipar	250
 DUAUOB	fusión	3885
 DUAUOB	fisión	250
@@ -20465,7 +20466,6 @@ DUAZ	díaz	1384
 DUAZ	diaz	833
 DUB	fin	109402
 DUB	dib	632
-DUB	fín	557
 DUB	din	470
 DUB	dub	220
 DUBA	fina	2477
@@ -20689,6 +20689,7 @@ DUCGA	ficha	2336
 DUCGAA	fichas	2478
 DUCGAA	duchas	1647
 DUCGAA	dichas	544
+DUCGABDO	duchando	202
 DUCGADO	fichado	509
 DUCGADO	duchado	277
 DUCGAE	fichar	306
@@ -20752,6 +20753,7 @@ DUCUBAMEBTE	divinamente	298
 DUCUBO	divino	3570
 DUCUBOA	divinos	502
 DUCUBUDAD	divinidad	579
+DUCUDAMOA	dividamos	202
 DUCUDE	divide	1270
 DUCUDEB	dividen	380
 DUCUDEBDOA	dividendos	275
@@ -20830,7 +20832,6 @@ DUDEOA	fideos	2608
 DUDEUCOMUAO	fideicomiso	851
 DUDLET	dudley	991
 DUDO	dudo	14582
-DUDO	dudó	364
 DUDO	fido	244
 DUDOAA	dudosa	516
 DUDOAO	dudoso	751
@@ -20859,7 +20860,6 @@ DUDUCULTADEA	dificultades	4979
 DUDUEE	didier	316
 DUDUEEE	difiere	208
 DUE	fue	781449
-DUE	fué	16211
 DUEA	dura	18977
 DUEA	dirá	14641
 DUEA	dira	382
@@ -21202,7 +21202,6 @@ DUJEEOB	dijeron	44151
 DUJO	dijo	342900
 DUJO	fijo	3593
 DUJO	fijó	788
-DUJO	dijó	239
 DUJOA	fijos	507
 DUJOB	dijon	234
 DUJU	fiji	465
@@ -21231,7 +21230,6 @@ DULCEMEBTE	dulcemente	666
 DULCEUM	fulcrum	269
 DULCUBEA	dulcinea	274
 DULE	dile	51271
-DULE	díle	487
 DULEA	diles	10995
 DULEMA	dilema	1803
 DULETE	filete	2843
@@ -21245,6 +21243,7 @@ DULLOET	fillory	221
 DULLUBGEE	dillinger	335
 DULMA	filma	611
 DULMAATE	filmaste	252
+DULMAB	filman	202
 DULMABDO	filmando	2538
 DULMACUOB	filmación	2047
 DULMACUOBEA	filmaciones	297
@@ -21314,7 +21313,6 @@ DUMAMOA	fumamos	473
 DUMBLEDOEE	dumbledore	313
 DUMBO	dumbo	318
 DUME	dime	84079
-DUME	díme	729
 DUME	fume	660
 DUME	fumé	492
 DUMEA	fumes	548
@@ -21344,8 +21342,6 @@ DUO	fío	1401
 DUO	dúo	1079
 DUO	fio	236
 DUOA	dios	476939
-DUOA	díos	592
-DUOA	diós	465
 DUOAA	diosa	5072
 DUOAAA	diosas	400
 DUOAEA	dioses	13219
@@ -21395,7 +21391,6 @@ DUTZOATEUCJ	fitzpatrick	621
 DUU	fui	99366
 DUU	fuí	4123
 DUUATE	fuiste	50201
-DUUATE	fuíste	230
 DUUATEA	fuistes	264
 DUUATEUA	fuisteis	1211
 DUUEBO	diurno	309
@@ -21409,7 +21404,6 @@ EAA	esa	553442
 EAA	ésa	21914
 EAA	ras	274
 EAAA	esas	140885
-EAAA	ésas	2840
 EAAB	raab	211
 EAACA	rasca	469
 EAACAA	rascas	204
@@ -21993,12 +21987,10 @@ EAMULLETE	ramillete	300
 EAMUTA	ramita	320
 EAMUTAA	ramitas	205
 EAO	eso	2029720
-EAO	éso	2940
 EAO	rap	1928
 EAO	rao	389
 EAO	esp	256
 EAOA	esos	171237
-EAOA	ésos	2519
 EAOAAMO	espasmo	393
 EAOAAMOA	espasmos	537
 EAOABTA	espanta	364
@@ -22095,7 +22087,6 @@ EAOECULAE	especular	684
 EAOECUMEB	espécimen	894
 EAOECUMEBEA	especímenes	486
 EAOEEA	espera	270741
-EAOEEA	esperá	548
 EAOEEAA	esperas	13828
 EAOEEAAE	esperase	249
 EAOEEAATE	esperaste	1073
@@ -22158,7 +22149,6 @@ EAOEEEUA	esperéis	253
 EAOEEMA	esperma	3316
 EAOEEMATOZOUDEA	espermatozoides	318
 EAOEEO	espero	129454
-EAOEEO	esperó	1981
 EAOEEO	rapero	698
 EAOEEOA	raperos	332
 EAOEJO	espejo	12332
@@ -22373,7 +22363,6 @@ EATADUATUCAMEBTE	estadísticamente	587
 EATADUO	estadio	4204
 EATADUOA	estadios	353
 EATAE	estar	402369
-EATAE	estár	366
 EATAEA	estará	74836
 EATAEA	estara	1948
 EATAEAA	estarás	28804
@@ -22408,7 +22397,6 @@ EATALLUDOA	estallidos	216
 EATALO	estaño	312
 EATAMBUL	estambul	1294
 EATAMOA	estamos	376563
-EATAMOA	estámos	351
 EATAMOA	estampa	326
 EATAMOADO	estampado	373
 EATAMOUDA	estampida	631
@@ -22555,7 +22543,6 @@ EATLAB	raylan	947
 EATMOBD	raymond	6122
 EATO	esto	1297847
 EATO	rato	37101
-EATO	ésto	10720
 EATO	rayo	7617
 EATOA	estos	176532
 EATOA	rayos	18443
@@ -22677,6 +22664,7 @@ EATUOUDO	estúpido	46441
 EATUOUDO	estupido	3000
 EATUOUDOA	estúpidos	7316
 EATUOUDOA	estupidos	469
+EATUOULA	estipula	202
 EATUTO	ratito	1566
 EAU	rai	382
 EAUBA	raina	703
@@ -22788,6 +22776,7 @@ EBAMOEE	enamore	931
 EBAMOEEA	enamores	424
 EBAMOEO	enamoró	2036
 EBAMOEO	enamoro	577
+EBAOEDECEDOE	ensordecedor	202
 EBAT	ebay	764
 EBAUCUA	ensucia	344
 EBAUCUAB	ensucian	203
@@ -22937,6 +22926,7 @@ EBCEEEAEAB	encerraran	227
 EBCEEEAEAE	encerrarse	214
 EBCEEEAEBOA	encerrarnos	248
 EBCEEEAEE	encerraré	364
+EBCEEEAEEMOA	encerraremos	202
 EBCEEEAELA	encerrarla	310
 EBCEEEAELO	encerrarlo	732
 EBCEEEAELOA	encerrarlos	272
@@ -23123,6 +23113,7 @@ EBCUEEEAB	encierran	648
 EBCUEEEALO	enciérralo	205
 EBCUEEEE	encierre	320
 EBCUEEEEB	encierren	793
+EBCUEEEEBLO	enciérrenlo	202
 EBCUEEEO	encierro	923
 EBCUELCE	envuelve	740
 EBCUELCO	envuelvo	210
@@ -23143,6 +23134,7 @@ EBCUOA	envíos	789
 EBDAAUA	énfasis	753
 EBDADA	enfada	1216
 EBDADAA	enfadas	781
+EBDADAATE	enfadaste	201
 EBDADAB	enfadan	208
 EBDADABA	enfadaba	221
 EBDADABDO	enfadando	222
@@ -23648,7 +23640,6 @@ EBTEUATECE	entristece	866
 EBTO	ento	244
 EBTOBCE	entonce	258
 EBTOBCEA	entonces	609938
-EBTOBCEA	entónces	219
 EBTOBEA	entones	363
 EBTOCEA	entoces	457
 EBTOEBO	entorno	3144
@@ -24486,6 +24477,7 @@ EECLUTAEOB	reclutaron	318
 EECLUTAMUEBTO	reclutamiento	1185
 EECLUTO	reclutó	532
 EECLUUDO	recluido	267
+EECOATADA	recostada	201
 EECOATADO	recostado	290
 EECOATAEME	recostarme	385
 EECOATAETE	recostarte	264
@@ -24583,6 +24575,7 @@ EECOEEEB	recorren	305
 EECOEEEE	recorrer	2736
 EECOEEU	recorrí	376
 EECOEEUDO	recorrido	4232
+EECOEEUDOA	recorridos	201
 EECOEEUEBDO	recorriendo	817
 EECOEEUMOA	recorrimos	255
 EECOEEUO	recorrió	341
@@ -24658,6 +24651,7 @@ EECOMEBDADO	recomendado	904
 EECOMEBDAE	recomendar	942
 EECOMEBDAEE	recomendaré	327
 EECOMEBDAELE	recomendarle	225
+EECOMEBDAEME	recomendarme	202
 EECOMEBDAEOB	recomendaron	219
 EECOMEBDAETE	recomendarte	229
 EECOMEBDAEUA	recomendaría	732
@@ -25195,6 +25189,7 @@ EELATUCA	relativa	569
 EELATUCAMEBTE	relativamente	1557
 EELATUCO	relativo	862
 EELATUCUDAD	relatividad	513
+EELE	relé	201
 EELECABCUA	relevancia	879
 EELECABTE	relevante	2605
 EELECABTEA	relevantes	513
@@ -25892,7 +25887,6 @@ ELJA	elka	688
 ELJUBA	elkins	287
 ELL	ell	238
 ELLA	ella	800671
-ELLA	élla	298
 ELLAA	ellas	46892
 ELLAQOETG	ellsworth	247
 ELLE	elle	796
@@ -25997,6 +25991,7 @@ EMBAECACUOBEA	embarcaciones	256
 EMBAECADEEO	embarcadero	637
 EMBAECADO	embarcado	332
 EMBAECAE	embarcar	710
+EMBAECAEAE	embarcarse	202
 EMBAECO	embarcó	250
 EMBAEGO	embargo	41642
 EMBAEQUE	embarque	1330
@@ -26171,7 +26166,6 @@ EMOLEADOE	empleador	826
 EMOLEADOEEA	empleadores	294
 EMOLEAE	emplear	862
 EMOLEO	empleo	14071
-EMOLEO	empleó	271
 EMOLEOA	empleos	1980
 EMOOLLOB	empollón	385
 EMOOLLOBEA	empollones	204
@@ -26419,6 +26413,7 @@ EODEOA	rodeos	1619
 EODEUGO	rodrigo	1490
 EODEUGUEZ	rodríguez	1191
 EODEUGUEZ	rodriguez	459
+EODGEE	rodger	201
 EODGEEA	rodgers	354
 EODO	rodó	609
 EODOLDO	rodolfo	423
@@ -26515,6 +26510,7 @@ EOMOEMOA	rompemos	606
 EOMOETE	rómpete	224
 EOMOO	rompo	1895
 EOMOU	rompí	4488
+EOMOU	rompi	202
 EOMOUA	rompía	466
 EOMOUATE	rompiste	3704
 EOMOUEBDO	rompiendo	3581
@@ -26976,7 +26972,6 @@ EZAAOEEABTE	exasperante	270
 EZACTA	exacta	3964
 EZACTAA	exactas	1159
 EZACTAMEBTE	exactamente	91598
-EZACTAMEBTE	exáctamente	470
 EZACTO	exacto	26087
 EZACTOA	exactos	1521
 EZACTUTUD	exactitud	1035
@@ -27338,7 +27333,6 @@ EZTEALAMOA	extrañamos	1157
 EZTEALE	extrañé	3583
 EZTEALE	extrañe	761
 EZTEALO	extraño	61249
-EZTEALO	extrañó	316
 EZTEALOA	extraños	9782
 EZTEAODUCUAL	extraoficial	552
 EZTEAODUCUALMEBTE	extraoficialmente	911
@@ -27734,9 +27728,7 @@ GABZ	ganz	248
 GABZO	hanzo	248
 GAC	hac	203
 GACE	hace	495352
-GACE	hacé	244
 GACEA	haces	166985
-GACEA	hacés	1171
 GACEB	hacen	81807
 GACED	haced	2454
 GACEDLE	hacedle	239
@@ -27866,6 +27858,7 @@ GAEDUAOB	hardison	651
 GAEDUB	hardin	397
 GAEDUBEE	gardiner	297
 GAEDUBG	harding	962
+GAEDUBJEL	garfunkel	202
 GAEDUELD	garfield	918
 GAEDUO	garfio	1134
 GAEE	haré	117579
@@ -27920,7 +27913,6 @@ GAETLET	hartley	757
 GAETMAB	hartman	442
 GAETMABB	hartmann	456
 GAETO	harto	9525
-GAETO	hartó	273
 GAETOA	hartos	894
 GAEU	hari	780
 GAEU	haru	468
@@ -27944,6 +27936,7 @@ GAGAB	hagan	26381
 GAGABAE	háganse	556
 GAGABLE	háganle	329
 GAGABLO	háganlo	2316
+GAGABLO	haganlo	201
 GAGABME	háganme	554
 GAGABOA	háganos	233
 GAGAEUB	gagarin	217
@@ -28037,6 +28030,7 @@ GALLE	hallé	2281
 GALLE	halle	759
 GALLEA	halles	211
 GALLEB	hallen	343
+GALLEE	haller	202
 GALLEGO	gallego	212
 GALLEMOA	hallemos	415
 GALLET	halley	378
@@ -28176,7 +28170,6 @@ GAZLA	hazla	1174
 GAZLE	hazle	2684
 GAZLEA	hazles	428
 GAZLO	hazlo	37804
-GAZLO	házlo	474
 GAZLOA	hazlos	487
 GAZME	hazme	11718
 GAZMEEEEUE	hazmerreír	721
@@ -29118,6 +29111,7 @@ GOLOEO	golpeó	10660
 GOLOEO	golpeo	1773
 GOLOETEO	golpeteo	244
 GOLOGEADUCA	holográfica	236
+GOLOGEADUCO	holográfico	202
 GOLOGEAMA	holograma	1056
 GOLOGEAMAA	hologramas	396
 GOLOUZA	golpiza	678
@@ -29354,7 +29348,6 @@ GUATAEUA	gustaria	4090
 GUATAEUAB	gustarían	617
 GUATAMOA	gustamos	624
 GUATE	guste	14942
-GUATE	gusté	371
 GUATEA	gustes	1203
 GUATEB	gusten	1969
 GUATEE	guster	281
@@ -29398,6 +29391,7 @@ GUBBEE	gunner	315
 GUBBLE	hubble	671
 GUBBOBA	gibbons	674
 GUBBT	ginny	1214
+GUBBUE	ginnie	201
 GUBCALD	gunvald	310
 GUBCAOUE	hincapié	335
 GUBCGA	hincha	530
@@ -29473,6 +29467,7 @@ GUCEBA	givens	450
 GUCJ	huck	1081
 GUCJA	hicks	1317
 GUCJET	hickey	487
+GUCJLEBEEET	huckleberry	201
 GUCJMAB	hickman	272
 GUCJOJ	hickok	308
 GUCUATE	hiciste	102722
@@ -29860,7 +29855,6 @@ GUZE	hize	395
 GUZLET	huxley	400
 GUZMAB	guzmán	352
 GUZO	hizo	196192
-GUZO	hizó	226
 JA	ja	12991
 JAA	jas	241
 JAAA	kass	457
@@ -29870,7 +29864,6 @@ JAAE	jase	286
 JAAMUBE	jasmine	1557
 JAAOAE	kaspar	221
 JAAOB	jason	15748
-JAAOB	jasón	383
 JAAOEE	jasper	2430
 JAAOEE	kasper	382
 JAAUM	kasim	220
@@ -30361,7 +30354,6 @@ JOBOGA	konoha	203
 JOBU	joni	381
 JOCAC	kovac	686
 JOCEB	joven	82919
-JOCEB	jóven	1008
 JOCEBCUTA	jovencita	5468
 JOCEBCUTAA	jovencitas	1098
 JOCEBCUTO	jovencito	3931
@@ -30413,7 +30405,6 @@ JOEBADA	jornada	2176
 JOEBADAA	jornadas	220
 JOEBUG	koenig	324
 JOEDAB	jordan	8934
-JOEDAB	jordán	243
 JOEDABUA	jordania	771
 JOEDT	jordy	263
 JOEDU	jordi	430
@@ -30470,6 +30461,7 @@ JQABG	kwang	326
 JQAU	kwai	254
 JQOB	kwon	687
 JTEA	kyra	428
+JTLA	kyla	202
 JTLE	kyle	13935
 JTLUE	kylie	790
 JTOJO	kyoko	454
@@ -30548,7 +30540,6 @@ JUBTEB	junten	505
 JUBTEBAE	júntense	348
 JUBTEMOA	juntemos	301
 JUBTO	junto	37794
-JUBTO	juntó	491
 JUBTOA	juntos	129353
 JUBULACUOB	jubilación	1713
 JUBULADO	jubilado	1081
@@ -30660,6 +30651,7 @@ JUGADAA	jugadas	1145
 JUGADO	jugado	5631
 JUGADOE	jugador	10832
 JUGADOEA	jugadora	859
+JUGADOEAA	jugadoras	202
 JUGADOEEA	jugadores	7438
 JUGAE	jugar	62132
 JUGAEA	jugará	673
@@ -30988,6 +30980,7 @@ LAEEDO	laredo	252
 LAEET	larry	16045
 LAEGA	larga	25955
 LAEGAA	largas	6390
+LAEGAATE	largaste	202
 LAEGAB	largan	304
 LAEGADO	largado	808
 LAEGAE	largar	551
@@ -31002,7 +30995,6 @@ LAEGAOA	largaos	871
 LAEGATE	lárgate	11702
 LAEGATE	largate	670
 LAEGO	largo	53833
-LAEGO	largó	1161
 LAEGOA	largos	4739
 LAEGUE	largue	589
 LAEGUE	largué	302
@@ -31361,7 +31353,6 @@ LEMA	lema	2331
 LEMOB	lemon	3057
 LEMUE	lémur	205
 LEO	leo	18940
-LEO	léo	220
 LEOB	león	8422
 LEOB	leon	3766
 LEOB	léon	270
@@ -31539,6 +31530,7 @@ LLEBAELA	llenarla	266
 LLEBAELO	llenarlo	556
 LLEBAEOB	llenaron	552
 LLEBAETE	llenarte	207
+LLEBAEUA	llenaría	202
 LLEBALO	llénalo	366
 LLEBAMOA	llenamos	455
 LLEBDO	llendo	774
@@ -32003,7 +31995,6 @@ LUBEAL	lineal	367
 LUBEAMOA	libramos	383
 LUBEATE	líbrate	235
 LUBEE	libre	62421
-LUBEE	libré	257
 LUBEEA	libres	12515
 LUBEEA	libera	2623
 LUBEEAA	liberas	366
@@ -32057,7 +32048,6 @@ LUBEETUBAJE	libertinaje	278
 LUBEETUBO	libertino	301
 LUBELULA	libélula	323
 LUBEO	libro	64445
-LUBEO	libró	524
 LUBEOA	libros	28603
 LUBEUCABTE	lubricante	832
 LUBEUTO	librito	239
@@ -32894,6 +32884,7 @@ MAEEAA	mareas	833
 MAEEABDO	mareando	413
 MAEEADA	mareada	1348
 MAEEADO	mareado	2033
+MAEEAJECG	marrakech	202
 MAEEJ	marek	451
 MAEEO	mareo	1253
 MAEEOA	mareos	783
@@ -33155,6 +33146,7 @@ MALEATAE	malestar	946
 MALEBTEBDUDO	malentendido	4989
 MALEBTEBDUDOA	malentendidos	507
 MALEBTUEBDAA	malentiendas	234
+MALEDUCA	maléfica	202
 MALEDUCADA	maleducada	549
 MALEDUCADO	maleducado	1139
 MALEDUCUO	maleficio	245
@@ -33516,7 +33508,6 @@ MCQUEEB	mcqueen	859
 ME	me	3927712
 MEA	mes	45648
 MEA	mea	814
-MEA	més	218
 MEAA	mesa	45409
 MEAA	meas	215
 MEAAA	mesas	3699
@@ -33650,7 +33641,6 @@ MEDALLOB	medallón	1430
 MEDEA	medea	279
 MEDELLUB	medellín	226
 MEDUA	media	39998
-MEDUA	medía	636
 MEDUAA	medias	6986
 MEDUAA	medusa	1053
 MEDUAAA	medusas	394
@@ -34211,6 +34201,7 @@ MOCUEBDOAE	moviéndose	2462
 MOCUEBDOBOA	moviéndonos	564
 MOCUEBDOTE	moviéndote	727
 MOCUEEA	moviera	442
+MOCUEEAA	movieras	201
 MOCUEEOB	movieron	641
 MOCUL	móvil	14734
 MOCUL	movil	518
@@ -34228,6 +34219,7 @@ MODALEA	modales	5212
 MODEATA	modesta	1113
 MODEATAMEBTE	modestamente	307
 MODEATO	modesto	2280
+MODEATOA	modestos	202
 MODEATUA	modestia	998
 MODEEACUOB	moderación	654
 MODEEADA	moderada	260
@@ -34506,7 +34498,6 @@ MOTUCADOA	motivados	299
 MOTUCADOE	motivador	217
 MOTUCAE	motivar	288
 MOTUCO	motivo	24276
-MOTUCO	motivó	237
 MOTUCOA	motivos	9546
 MOU	moi	582
 MOUAAE	mousse	437
@@ -34799,8 +34790,6 @@ MUDUEBDO	midiendo	397
 MUE	mir	316
 MUE	mie	218
 MUEA	mira	349779
-MUEA	mirá	2367
-MUEA	míra	251
 MUEAA	miras	12075
 MUEAATE	miraste	1731
 MUEAB	miran	5225
@@ -35131,7 +35120,6 @@ MUMU	mimí	329
 MUMUCA	mímica	281
 MUO	mío	212096
 MUO	mio	17318
-MUO	mió	459
 MUOA	míos	11941
 MUOA	mios	712
 MUOCAEDUO	miocardio	247
@@ -35185,7 +35173,6 @@ OAA	osa	1170
 OAA	pas	961
 OAAA	pasa	315529
 OAAA	osas	389
-OAAA	pasá	208
 OAAAA	pasas	8581
 OAAAAE	pasase	815
 OAAAATE	pasaste	5664
@@ -35281,6 +35268,7 @@ OAAEAMOA	paseamos	311
 OAAEB	pasen	8611
 OAAEBLA	pásenla	217
 OAAEME	páseme	604
+OAAEMELO	pásemelo	201
 OAAEMOA	pasemos	2774
 OAAEO	paseo	20024
 OAAEOA	paseos	1349
@@ -35447,10 +35435,10 @@ OADEE	padre	351051
 OADEEA	padres	84855
 OADEUBO	padrino	5612
 OADEUBOA	padrinos	524
+OADMA	padma	202
 OADUA	padua	218
 OAE	par	81901
 OAEA	para	2832100
-OAEA	pará	1293
 OAEA	ósea	1105
 OAEA	osea	988
 OAEAA	paras	2356
@@ -35892,6 +35880,7 @@ OAQALD	oswald	1834
 OAQBEE	pawnee	916
 OAQUETE	paquete	13720
 OAQUETEA	paquetes	3256
+OAQUUATAB	paquistán	202
 OAQUUATABU	paquistaní	379
 OAQUUTA	paquita	540
 OAT	pat	4995
@@ -36047,7 +36036,6 @@ OAUCOTUCOA	psicóticos	271
 OAUEUA	osiris	373
 OAUGE	paige	5696
 OAUL	paul	34600
-OAUL	paúl	222
 OAULA	paula	5115
 OAULAOB	paulson	433
 OAULETTE	paulette	494
@@ -36495,7 +36483,6 @@ ODUEA	odies	1043
 ODUEB	odien	409
 ODULE	odile	251
 ODUO	odio	57427
-ODUO	odió	308
 ODUOA	odios	203
 ODUOAA	odiosa	639
 ODUOAO	odioso	1056
@@ -36748,7 +36735,6 @@ OEDAZO	pedazo	15519
 OEDAZOA	pedazos	10094
 OEDEATAL	pedestal	680
 OEDEB	orden	64437
-OEDEB	órden	320
 OEDEBA	ordena	3231
 OEDEBAA	ordenas	353
 OEDEBAATE	ordenaste	763
@@ -36858,6 +36844,7 @@ OEEAEBTADO	presentado	4915
 OEEAEBTADOA	presentados	557
 OEEAEBTADOE	presentador	1145
 OEEAEBTADOEA	presentadora	476
+OEEAEBTADOEEA	presentadores	202
 OEEAEBTAE	presentar	10770
 OEEAEBTAEA	presentará	1294
 OEEAEBTAEA	presentara	626
@@ -36902,6 +36889,7 @@ OEEAEECATUCOA	preservativos	430
 OEEAEGUU	perseguí	480
 OEEAEGUUA	perseguía	1091
 OEEAEGUUAB	perseguían	574
+OEEAEGUUATE	perseguiste	202
 OEEAEGUUDA	perseguida	391
 OEEAEGUUDO	perseguido	1899
 OEEAEGUUDOA	perseguidos	708
@@ -37252,7 +37240,6 @@ OEEDOBAME	perdoname	1122
 OEEDOBAMOA	perdonamos	706
 OEEDOBAUA	perdonáis	202
 OEEDOBE	perdone	20775
-OEEDOBE	perdoné	530
 OEEDOBEA	perdones	1388
 OEEDOBEB	perdonen	2859
 OEEDOBEBME	perdónenme	995
@@ -37336,6 +37323,7 @@ OEEEJUL	perejil	511
 OEEEO	perro	63070
 OEEEOA	perros	24037
 OEEET	perry	4236
+OEEETU	preeti	201
 OEEEUB	perrin	345
 OEEEUEA	pereira	239
 OEEEUTA	perrita	542
@@ -37515,6 +37503,7 @@ OEEMUTUEMELO	permitírmelo	328
 OEEMUTUETE	permitirte	1027
 OEEMUTUETELO	permitírtelo	227
 OEEMUTUEUA	permitiría	2122
+OEEMUTUEUAA	permitirías	201
 OEEMUTUEUAB	permitirían	305
 OEEMUTUMOA	permitimos	928
 OEEMUTUO	permitió	3467
@@ -37752,6 +37741,7 @@ OEGADA	pegada	1386
 OEGADAA	pegadas	399
 OEGADO	pegado	5573
 OEGADOA	pegados	988
+OEGADUZA	pegadiza	202
 OEGADUZO	pegadizo	288
 OEGAE	pegar	3993
 OEGAEA	pegara	387
@@ -38360,6 +38350,7 @@ OEOTOCOLO	protocolo	5492
 OEOTOCOLOA	protocolos	1624
 OEOTOTUOO	prototipo	1867
 OEOTOTUOOA	prototipos	305
+OEOTUBEEABCUA	protuberancia	202
 OEOUAT	proust	287
 OEOUBO	pepino	1051
 OEOUBOA	pepinos	455
@@ -38459,6 +38450,7 @@ OEUAUOBEEOA	prisioneros	9313
 OEUB	orin	245
 OEUBA	orina	4534
 OEUBA	peina	233
+OEUBAATE	orinaste	201
 OEUBABDO	orinando	612
 OEUBABDO	peinando	266
 OEUBADO	peinado	2726
@@ -38593,6 +38585,7 @@ OGEEBA	pheebs	269
 OGELOA	phelps	603
 OGEO	ogro	927
 OGEOA	ogros	251
+OGETBE	phryne	201
 OGLOZ	phlox	255
 OGM	ogm	217
 OGOEBE	phoebe	5189
@@ -39019,6 +39012,7 @@ OOBG	pong	853
 OOBGA	ponga	18359
 OOBGAA	pongas	11694
 OOBGAAE	póngase	3706
+OOBGAAE	pongase	202
 OOBGAB	pongan	6709
 OOBGABAE	pónganse	2615
 OOBGABAE	ponganse	240
@@ -39183,6 +39177,7 @@ OOEEAELO	operarlo	327
 OOEEAEME	operarme	361
 OOEEAEOB	operaron	459
 OOEEAETE	operarte	252
+OOEEAEUO	operario	202
 OOEEAEUOA	operarios	242
 OOEEAMOA	operamos	352
 OOEEAOE	opresor	224
@@ -39506,7 +39501,6 @@ OUAGJUB	pushkin	210
 OUAJ	puaj	453
 OUAO	piso	36054
 OUAO	puso	34438
-OUAO	pisó	601
 OUAOA	pisos	4503
 OUAOTEABDO	pisoteando	204
 OUAOTEADO	pisoteado	286
@@ -39757,14 +39751,12 @@ OUDUO	pidio	666
 OUE	pie	51066
 OUE	oír	33646
 OUE	oir	4509
-OUE	pié	1185
 OUE	pue	329
 OUE	oué	289
 OUEA	pues	143870
 OUEA	pies	37222
 OUEA	pura	11221
 OUEA	oirá	1026
-OUEA	pués	372
 OUEA	pira	349
 OUEAA	puras	1270
 OUEAA	oirás	687
@@ -40035,6 +40027,7 @@ OUTT	pitt	1114
 OUTTABUEG	pittsburg	248
 OUTTABUEGG	pittsburgh	1589
 OUTTMAB	pittman	289
+OUTU	piti	202
 OUTUB	putin	374
 OUTUDO	pitido	1762
 OUTUDO	pitufo	453
@@ -40129,6 +40122,7 @@ QEALET	wesley	2591
 QEATBEOOJ	westbrook	218
 QEATCGEATEE	westchester	417
 QEATEB	westen	546
+QEATLAJE	westlake	201
 QEATMUBATEE	westminster	572
 QEATOB	weston	1332
 QEATQOOD	westwood	247
@@ -40251,7 +40245,6 @@ QUCJGAM	wickham	595
 QUDU	wifi	30000
 QUE	que	14421005
 QUE	qué	4166708
-QUE	qúe	615
 QUEAO	queso	16571
 QUEAOA	quesos	813
 QUEBEABDO	quebrando	227
@@ -40513,7 +40506,6 @@ QUUCGE	quiche	263
 QUUCUO	quicio	1261
 QUUEB	quién	566465
 QUUEB	quien	187133
-QUUEB	quíen	394
 QUUEBEA	quiénes	23032
 QUUEBEA	quienes	21083
 QUUEBEA	quiebra	2587
@@ -40526,7 +40518,6 @@ QUUEEAA	quieras	58704
 QUUEEAB	quieran	10607
 QUUEEE	quiere	332148
 QUUEEEA	quieres	515465
-QUUEEEA	quiéres	739
 QUUEEEB	quieren	94018
 QUUEEEME	quiéreme	211
 QUUEEO	quiero	798831
@@ -40641,7 +40632,6 @@ TAAGA	tasha	1799
 TAAMUB	yasmin	326
 TAB	tan	573916
 TAB	yan	861
-TAB	tán	448
 TABA	tana	251
 TABAACO	tabasco	213
 TABACO	tabaco	4600
@@ -40746,8 +40736,8 @@ TAEDAEOB	tardaron	633
 TAEDAEUA	tardaría	752
 TAEDAMOA	tardamos	502
 TAEDE	tarde	191883
-TAEDE	tardé	1004
 TAEDEA	tardes	19219
+TAEDEB	tarden	201
 TAEDO	tardó	1405
 TAEDO	tardo	872
 TAEDUA	tardis	2452
@@ -40816,6 +40806,7 @@ TALLA	talla	4854
 TALLAA	tallas	489
 TALLADA	tallada	240
 TALLADO	tallado	500
+TALLADOA	tallados	202
 TALLAE	tallar	385
 TALLAEUBEA	tallarines	496
 TALLAGAAAEE	tallahassee	298
@@ -40924,6 +40915,7 @@ TBO	yno	371
 TC	tv	16995
 TCEA	yves	568
 TCETTE	yvette	630
+TCGAUJOCAJT	tchaikovsky	201
 TCOBBE	yvonne	1438
 TE	te	3034375
 TEA	tés	278
@@ -40931,7 +40923,6 @@ TEA	tra	233
 TEA	tes	220
 TEAA	tras	49345
 TEAA	tess	3775
-TEAA	trás	407
 TEAAA	tessa	2115
 TEAABOEDADOE	trasbordador	776
 TEAACEBDEBTAL	trascendental	389
@@ -41054,7 +41045,6 @@ TEABAJEA	trabajes	1663
 TEABAJEB	trabajen	1566
 TEABAJEMOA	trabajemos	1095
 TEABAJO	trabajo	363747
-TEABAJO	trabajó	7227
 TEABAJOA	trabajos	11862
 TEABAJUTO	trabajito	724
 TEABAMUAOE	transmisor	2075
@@ -41222,6 +41212,7 @@ TEAGAE	tragar	2173
 TEAGAEA	tragará	230
 TEAGAEAE	tragarse	449
 TEAGAEME	tragarme	258
+TEAGAETE	tragarte	201
 TEAGAMOBEDAA	tragamonedas	296
 TEAGAOEEEAA	tragaperras	285
 TEAGATE	trágate	231
@@ -41259,6 +41250,7 @@ TEAMO	tramo	921
 TEAMOA	trampa	23494
 TEAMOA	tramos	212
 TEAMOAA	trampas	4875
+TEAMOEEO	trampero	202
 TEAMOOAA	tramposa	536
 TEAMOOAO	tramposo	1944
 TEAMOOAOA	tramposos	600
@@ -41567,6 +41559,7 @@ TEEAOUAA	terapias	398
 TEEAOUATA	terapista	294
 TEEB	tren	37976
 TEEBA	yerba	591
+TEEBA	trena	201
 TEEBEA	trenes	4741
 TEEBEEA	ternera	1872
 TEEBEEO	ternero	557
@@ -42293,7 +42286,6 @@ TOLLUCEE	tolliver	374
 TOLU	yoli	278
 TOM	tom	43467
 TOMA	toma	102733
-TOMA	tomá	534
 TOMAA	tomas	16764
 TOMAA	tomás	1655
 TOMAAE	tomase	212
@@ -42329,6 +42321,7 @@ TOMAEEMOA	tomaremos	5487
 TOMAELA	tomarla	1912
 TOMAELAA	tomarlas	639
 TOMAELE	tomarle	1050
+TOMAELEA	tomarles	202
 TOMAELO	tomarlo	4047
 TOMAELOA	tomarlos	467
 TOMAEME	tomarme	3843
@@ -42689,6 +42682,7 @@ TUM	tum	295
 TUMA	yuma	255
 TUMADO	timado	245
 TUMADOE	timador	413
+TUMADOEEA	timadores	201
 TUMAE	timar	236
 TUMBA	tumba	14796
 TUMBAA	tumbas	3002
@@ -42705,6 +42699,7 @@ TUMBEELAJE	timberlake	283
 TUMBO	tumbó	264
 TUMBOA	tumbos	320
 TUMBUEA	timbira	258
+TUMMOBA	timmons	202
 TUMMT	timmy	2650
 TUMMUBA	timmins	235
 TUMO	timo	1211
@@ -42846,6 +42841,7 @@ UALAMUCA	islámica	341
 UALAMUCO	islámico	500
 UALAMUCOA	islámicos	214
 UALEA	isles	349
+UALELOA	isleños	202
 UAMAEL	ismael	299
 UAO	uso	19551
 UAO	usó	10382
@@ -42929,6 +42925,7 @@ UBAMOA	unamos	382
 UBAOATEBUBLE	insostenible	269
 UBAOECCUOB	inspección	3118
 UBAOECCUOBABDO	inspeccionando	263
+UBAOECCUOBADO	inspeccionado	202
 UBAOECCUOBAE	inspeccionar	1095
 UBAOECCUOBEA	inspecciones	406
 UBAOECTOE	inspector	21393
@@ -43243,6 +43240,7 @@ UBCOBACUEBCUA	inconsciencia	203
 UBCOBACUEBTE	inconsciente	6837
 UBCOBACUEBTEA	inconscientes	602
 UBCOBACUEBTEMEBTE	inconscientemente	478
+UBCOBAUATEBCUAA	inconsistencias	201
 UBCOBAUATEBTE	inconsistente	228
 UBCOBCEBUBLE	inconcebible	630
 UBCOBCEBUEBTE	inconveniente	2521
@@ -43514,7 +43512,6 @@ UBDOEMATUCO	informático	1040
 UBDOEMATUCO	informativo	593
 UBDOEMATUCOA	informáticos	494
 UBDOEME	informe	28207
-UBDOEME	informé	511
 UBDOEMEA	informes	8894
 UBDOEMEB	informen	653
 UBDOEMO	informó	2742
@@ -44254,6 +44251,7 @@ UDA	uds	3303
 UDAA	idas	371
 UDAGO	idaho	1008
 UDAT	uday	369
+UDC	ufc	202
 UDD	uff	359
 UDEA	idea	193369
 UDEAA	ideas	21803
@@ -44386,6 +44384,7 @@ UEEUTACUOB	irritación	394
 UEEUTADA	irritada	374
 UEEUTADO	irritado	632
 UEEUTAE	irritar	216
+UEEUTAEME	irritarme	202
 UEGEBCUA	urgencia	3098
 UEGEBCUAA	urgencias	4929
 UEGEBTE	urgente	10502
@@ -44868,6 +44867,7 @@ UTULUZAEUA	utilizaría	239
 UTULUZAMOA	utilizamos	1090
 UTULUZO	utilizó	3071
 UTULUZO	utilizo	883
+UUB	iib	201
 UZAE	izar	222
 UZGAE	izhar	270
 UZQUUEEDA	izquierda	34629
