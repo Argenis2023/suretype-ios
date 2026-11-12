@@ -156,20 +156,25 @@ final class KeyboardViewController: UIInputViewController {
         handleContextChange()
     }
 
-    /// Los cambios que hace este mismo teclado no se revisan (leer el campo en cada letra era lo que lo hacia lento).
+    /// Los avisos de cambio llegan con retraso despues de cada setMarkedText (sobre todo en WhatsApp),
+    /// asi que NUNCA se abandona la palabra en curso por un aviso: hacerlo dejaba texto subrayado
+    /// huerfano que el siguiente espacio reemplazaba, y por eso "se borraba la palabra".
+    /// Ademas el contexto que entrega iOS no incluye el texto subrayado, asi que tampoco sirve para comprobar.
     private func handleContextChange() {
-        if Date().timeIntervalSince(lastProxyOp) < 0.5 { return }
-        lastKind = .other
+        if Date().timeIntervalSince(lastProxyOp) < 1.0 { return }
         if slots.isEmpty {
+            lastKind = .other
             previousWord = nil
             scheduleAutoShift()
-        } else {
-            // Si el cursor se movio por fuera del teclado, se abandona la palabra en curso sin tocar el texto
-            let context = textDocumentProxy.documentContextBeforeInput ?? ""
-            if !context.hasSuffix(markedShown) {
-                resetComposition(touchField: false)
-                previousWord = nil
-            }
+            return
+        }
+        // Unico caso claro: el campo quedo vacio (se envio el mensaje); se descarta la palabra sin tocar nada.
+        let context = textDocumentProxy.documentContextBeforeInput ?? ""
+        if context.isEmpty {
+            resetComposition(touchField: false)
+            previousWord = "<s>"
+            lastKind = .other
+            scheduleAutoShift()
         }
     }
 
@@ -519,6 +524,7 @@ final class KeyboardViewController: UIInputViewController {
         idleWork = nil
         if fuzzyComputed || slots.isEmpty { return }
         fuzzyComputed = true
+        let wasLiteral = suggestions.isLiteral
         let full = engine.suggest(slots, previous: previousWord, includeFuzzy: true)
         let head = Array(full.words.prefix(suggestions.words.count))
         if candidateIndex == 0 || head == suggestions.words {
@@ -527,6 +533,11 @@ final class KeyboardViewController: UIInputViewController {
                 candidateIndex = 0
             }
             updateBar()
+            // Si solo habia letras literales y la autocorreccion encontro una palabra real,
+            // el campo tambien se actualiza (antes la barra decia "tratamiento" y el campo "teatamuemto").
+            if wasLiteral && !suggestions.isLiteral {
+                flushMarked()
+            }
         }
     }
 
@@ -547,18 +558,25 @@ final class KeyboardViewController: UIInputViewController {
         if slots.isEmpty || index < 0 || index >= suggestions.words.count { return }
         lastTouchKey = nil
         candidateIndex = index
-        commitComposition()
-        textDocumentProxy.insertText(" ")
+        commitComposition(suffix: " ")
         let now = Date()
-        lastProxyOp = now
         lastSpaceTime = now
         lastKind = .spaceAfterWord
         scheduleAutoShift()
     }
 
     /// Fija la palabra en el campo, la aprende y deja la barra vacia.
-    private func commitComposition() {
-        if slots.isEmpty { return }
+    /// La palabra (mas lo que venga detras: espacio, signo, salto de linea) se escribe con UNA sola
+    /// llamada a insertText, que en iOS reemplaza el texto subrayado de forma atomica. El camino viejo
+    /// (setMarkedText + unmarkText + insertText aparte) se desordenaba en WhatsApp y perdia el espacio.
+    private func commitComposition(suffix: String = "") {
+        if slots.isEmpty {
+            if !suffix.isEmpty {
+                textDocumentProxy.insertText(suffix)
+                lastProxyOp = Date()
+            }
+            return
+        }
         idleWork?.cancel()
         idleWork = nil
         var word = currentWord()
@@ -572,8 +590,7 @@ final class KeyboardViewController: UIInputViewController {
         if deliberate && wordCase == .once {
             word = capitalizedFirst(word)
         }
-        flushMarked()
-        textDocumentProxy.unmarkText()
+        textDocumentProxy.insertText(applyCase(currentWord()) + suffix)
         markedShown = ""
         lastProxyOp = Date()
         lastKind = .letter
@@ -602,15 +619,30 @@ final class KeyboardViewController: UIInputViewController {
     // MARK: - Teclas de accion
 
     private func pressSpace() {
-        let wasComposing = !slots.isEmpty
-        commitComposition()
         let now = Date()
         lastTouchKey = nil
-        if !wasComposing && lastKind == .spaceAfterWord && now.timeIntervalSince(lastSpaceTime) < 0.7 {
-            // Doble espacio: el espacio pasa a ser punto y espacio
-            textDocumentProxy.deleteBackward()
+        if !slots.isEmpty {
+            // Palabra + espacio en una sola llamada (asi el espacio no se pierde en el camino)
+            commitComposition(suffix: " ")
+            lastSpaceTime = now
+            lastKind = .spaceAfterWord
+            if activeLayer != .letters {
+                activeLayer = .letters
+                rebuildKeys()
+            }
+            scheduleAutoShift()
+            return
+        }
+        if lastKind == .spaceAfterWord && now.timeIntervalSince(lastSpaceTime) < 0.7 {
+            // Doble espacio: el espacio pasa a ser punto y espacio.
+            // Antes de borrar hacia atras se comprueba que de verdad haya un espacio
+            // (si el espacio anterior se perdio, borrar a ciegas se comia la ultima letra).
+            let context = textDocumentProxy.documentContextBeforeInput ?? ""
+            if context.hasSuffix(" ") {
+                textDocumentProxy.deleteBackward()
+            }
             textDocumentProxy.insertText(". ")
-            lastProxyOp = now
+            lastProxyOp = Date()
             lastSpaceTime = now
             lastKind = .spaceOther
             previousWord = "<s>"
@@ -626,9 +658,9 @@ final class KeyboardViewController: UIInputViewController {
             return
         }
         textDocumentProxy.insertText(" ")
-        lastProxyOp = now
+        lastProxyOp = Date()
         lastSpaceTime = now
-        lastKind = (wasComposing || lastKind == .letter) ? .spaceAfterWord : .spaceOther
+        lastKind = (lastKind == .letter) ? .spaceAfterWord : .spaceOther
         if activeLayer != .letters {
             activeLayer = .letters
             rebuildKeys()
@@ -637,20 +669,16 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func pressReturn() {
-        commitComposition()
         lastTouchKey = nil
-        textDocumentProxy.insertText("\n")
-        lastProxyOp = Date()
+        commitComposition(suffix: "\n")
         lastKind = .other
         previousWord = "<s>"
         scheduleAutoShift()
     }
 
     private func insertSymbol(_ s: String) {
-        commitComposition()
         lastTouchKey = nil
-        textDocumentProxy.insertText(s)
-        lastProxyOp = Date()
+        commitComposition(suffix: s)
         lastKind = (s.first?.isNumber ?? false) ? .letter : .other
         let endsSentence = (s == "." || s == "?" || s == "!" || s == "\u{00BF}" || s == "\u{00A1}")
         previousWord = endsSentence ? "<s>" : nil

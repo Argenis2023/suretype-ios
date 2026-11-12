@@ -177,7 +177,9 @@ final class LetterPopup: UIView {
 // MARK: - Barra de sugerencias
 
 final class SuggestionBar: UIView {
-    let languageButton = UIButton(type: .system)
+    // Botones .custom: los .system animan el titulo con un fundido y las candidatas
+    // se veian en blanco o tenues con cada tecla.
+    let languageButton = UIButton(type: .custom)
     private var slotButtons: [UIButton] = []
     private let messageLabel = UILabel()
     private var windowStart = 0
@@ -194,7 +196,7 @@ final class SuggestionBar: UIView {
         addSubview(languageButton)
 
         for i in 0..<slotCount {
-            let b = UIButton(type: .system)
+            let b = UIButton(type: .custom)
             b.titleLabel?.font = UIFont.systemFont(ofSize: 17)
             b.titleLabel?.adjustsFontSizeToFitWidth = true
             b.titleLabel?.minimumScaleFactor = 0.6
