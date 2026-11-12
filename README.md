@@ -4,16 +4,20 @@ Teclado personal estilo SureType (el de las BlackBerry): 2 letras por tecla y un
 
 ## Cómo funciona el teclado
 
-Teclado de estilo SureType (2 letras por tecla: QW · ER · TY · UI · OP / AS · DF · GH · JK · LÑ / ZX · CV · BN · M). No adivina palabras: tocas la **mitad izquierda** de la tecla para la primera letra y la **mitad derecha** para la segunda, y escribes la palabra completa. El teclado solo avisa si algo está mal.
+Teclado estilo SureType (2 letras por tecla: QW · ER · TY · UI · OP / AS · DF · GH · JK · LÑ / ZX · CV · BN · M). Pulsas cada tecla una vez por letra y el teclado adivina la palabra que estás escribiendo. No propone la palabra siguiente.
 
-- **Corrector:** usa el corrector del propio iOS (UITextChecker), español e inglés. Si una palabra está mal escrita, aparece en rojo en la barra de arriba con hasta tres correcciones. Al tocar una, reemplaza la palabra. Si la palabra en rojo es correcta (un nombre), tócala para guardarla.
-- **Doble espacio:** dos toques rápidos al espacio ponen punto y espacio.
+- **Rápido:** mientras escribes, la palabra en curso solo aparece en la barra de arriba. Se escribe en el campo una sola vez, al dar espacio o al tocar una candidata.
+- **Candidatas:** la barra muestra la mejor opción resaltada y otras al lado. La tecla de flechas circulares rota entre ellas. Espacio acepta la resaltada.
+- **Diccionario:** español e inglés (unas 45.000 palabras cada uno), por frecuencia. El botón ES/EN cambia de idioma.
+- **Aprende:** las palabras que eliges suben de prioridad. Las palabras nuevas (nombres) se aprenden si las deletreas con pulsación larga, letra por letra.
+- **Autocorrección:** si pulsas una tecla vecina por error, o dos teclas intercambiadas, las palabras que sí existen aparecen al final de la lista.
+- **Tildes y ñ:** mantén pulsada una tecla y desliza para elegir la letra exacta (a, á, s / u, ú, ü, i, í / l, ñ ...).
+- **Doble espacio:** dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula.
 - **Mayúsculas:** se activan solas al empezar un texto, después de punto, signo de interrogación o exclamación, y tras un salto de línea. Una pulsación para la siguiente letra, doble pulsación para bloquear.
-- **Tildes y ñ:** mantén pulsada la mitad de una tecla con vocal, n o c y desliza para elegir (á, é, í, ó, ú, ü, ñ, ç).
-- **Números y símbolos:** tecla `123`, con una segunda página `#+=`. El punto, mantenido, ofrece `? ! ¿ ¡ '`.
-- **Idioma:** el botón ES/EN cambia el idioma del corrector. Mantenerlo 1,5 segundos borra las palabras guardadas.
+- **Números y símbolos:** tecla `123`, con una segunda página `#+=`. El punto, mantenido, ofrece `, ? ! ¿ ¡ '`.
+- **Borrar palabras aprendidas:** mantén pulsado el botón ES/EN durante 1,5 segundos.
 
-No pide "Acceso total", no usa internet y no envía nada a ningún lado. La versión con predicción de palabras quedó guardada en la etiqueta `suretype-2-letras` del repositorio.
+No pide "Acceso total", no usa internet y no envía nada a ningún lado. Una versión anterior con predicción de la siguiente palabra está en la etiqueta `suretype-2-letras`, y una con corrector ortográfico del sistema en el commit "Teclas SureType de 2 letras".
 
 ## Paso 1: subir el proyecto a GitHub
 
@@ -55,10 +59,17 @@ La app "SureType" que aparece en la pantalla de inicio solo trae las instruccion
 
 Con una cuenta Apple gratuita la firma dura 7 días. Cuando el teclado deje de abrir, vuelve a instalar la misma `.ipa` con Sideloadly (los pasos 3 y 4). Si te molesta, SideStore o AltStore pueden renovar la firma automáticamente. Con la cuenta gratuita, la app y el teclado ocupan 2 de los 10 identificadores de app que Apple permite por semana.
 
+## Cambiar o ampliar el diccionario
+
+Edita `tools/build_dictionaries.py` (listas `ES_EXTRA` y `EN_EXTRA` para agregar palabras con una frecuencia), ejecuta `python tools/build_dictionaries.py --preview` y vuelve a subir los cambios. Con eso se regeneran `Keyboard/Resources/dict_es.txt` y `dict_en.txt`. Si cambias la distribución de teclas hay que cambiarla igual en `KEY_LETTERS` (Python) y en `KeyMap` (`Keyboard/SureTypeEngine.swift`).
+
 ## Limitaciones conocidas
 
 - iOS usa su propio teclado en campos de contraseña y en campos numéricos o de teléfono. No se puede cambiar.
 - No hay emojis ni dictado dentro del teclado. El micrófono de abajo a la derecha es el del sistema.
-- Las palabras guardadas como correctas solo se pueden quitar borrándolas todas (pulsación larga en ES/EN).
-- El corrector depende de los diccionarios de iOS. La app muestra cuáles hay disponibles en tu teléfono.
+- Las palabras mal aprendidas solo se pueden quitar borrándolas todas (pulsación larga en ES/EN).
 - La app contenedora no puede ver las palabras aprendidas, porque con una cuenta gratuita no existe memoria compartida entre la app y el teclado.
+
+## Créditos
+
+Las listas de frecuencia vienen de [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), basadas en OpenSubtitles, bajo licencia CC BY-SA 4.0. Los archivos `dict_es.txt` y `dict_en.txt` son una versión filtrada de esas listas y heredan esa licencia.

@@ -1,8 +1,17 @@
 import SwiftUI
-import UIKit
 
 @main
 struct SureTypeHostApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+
+struct ContentView: View {
+    @State private var text = ""
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -39,20 +48,16 @@ struct ContentView: View {
                         .font(.headline)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Cada tecla tiene dos letras. Toca la mitad izquierda para la primera y la mitad derecha para la segunda. Tú escribes cada palabra completa.")
-                        Text("Si una palabra está mal escrita, aparece en rojo en la barra de arriba con hasta tres correcciones. Toca una para reemplazarla.")
-                        Text("Si la palabra en rojo sí es correcta (un nombre, por ejemplo), tócala a ella para guardarla y que no se marque más.")
+                        Text("Pulsa cada tecla una vez por letra. El teclado adivina la palabra y la muestra en la barra de arriba.")
+                        Text("Espacio acepta la palabra resaltada. La tecla con las flechas circulares cambia a otra candidata, y también puedes tocar una en la barra.")
+                        Text("Mantén pulsada una tecla para elegir una letra exacta: tildes, ü y ñ. Así también deletreas nombres nuevos, que el teclado aprende.")
                         Text("Dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula. También se pone mayúscula al empezar una frase.")
-                        Text("Mantén pulsada la mitad de una tecla con vocal, n o c para elegir tilde, ü, ñ o ç. Mantén pulsado el punto para ver ? ! ¿ ¡ y '.")
-                        Text("El botón ES/EN cambia el idioma del corrector. Mantenerlo 1,5 segundos borra las palabras guardadas.")
+                        Text("El botón ES/EN cambia el idioma. Mantenerlo 1,5 segundos borra las palabras aprendidas.")
+                        Text("Mantén pulsado el punto para ver , ? ! ¿ ¡ y '.")
                     }
                     .font(.subheadline)
 
                     Divider()
-
-                    Text("Corrector disponible: " + spellInfo)
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
 
                     Text("Zona de prueba")
                         .font(.headline)

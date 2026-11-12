@@ -31,21 +31,21 @@ final class KeyboardViewController: UIInputViewController {
     private var shift: ShiftState = .off
     private var lastShiftTap = Date.distantPast
 
-    private var language = "es"
-    private var spellCode: String?
-    private let checker = UITextChecker()
-    private var learned: Set<String> = []
+    private var engine: SureTypeEngine!
+    private var engineReady = false
+
+    // Palabra en curso: solo vive en la barra hasta que das espacio o eliges una candidata
+    private var slots: [Slot] = []
+    private var suggestions = Suggestions(words: [], isLiteral: false)
+    private var candidateIndex = 0
+    private var wordCase: ShiftState = .off
+    private var fuzzyComputed = false
+    private var idleWork: DispatchWorkItem?
 
     private var lastKind: LastKind = .other
     private var lastSpaceTime = Date.distantPast
     private var lastProxyOp = Date.distantPast
 
-    // Palabra marcada como mal escrita y sus correcciones
-    private var flaggedWord: String?
-    private var flaggedTrailing = ""
-    private var flaggedSuggestions: [String] = []
-
-    private var spellWork: DispatchWorkItem?
     private var autoShiftWork: DispatchWorkItem?
 
     private var letterKeys: [KeyButton] = []
@@ -57,27 +57,15 @@ final class KeyboardViewController: UIInputViewController {
 
     private var popupStartX: CGFloat = 0
 
-    private static let accents: [Character: [String]] = [
-        "a": ["a", "\u{00E1}"],
-        "e": ["e", "\u{00E9}"],
-        "i": ["i", "\u{00ED}"],
-        "o": ["o", "\u{00F3}"],
-        "u": ["u", "\u{00FA}", "\u{00FC}"],
-        "n": ["n", "\u{00F1}"],
-        "c": ["c", "\u{00E7}"]
-    ]
 
     // MARK: - Ciclo de vida
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        language = UserDefaults.standard.string(forKey: "language") ?? "es"
-        if language != "es" && language != "en" { language = "es" }
-        if let saved = UserDefaults.standard.array(forKey: "learnedWords.v2") as? [String] {
-            learned = Set(saved)
-        }
-        resolveSpellLanguage()
+        let saved = UserDefaults.standard.string(forKey: "language") ?? "es"
+        let lang = Language(rawValue: saved) ?? Language.es
+        engine = SureTypeEngine(language: lang, bundle: Bundle(for: SureTypeEngine.self))
 
         canvas.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(canvas)
@@ -93,14 +81,12 @@ final class KeyboardViewController: UIInputViewController {
         h.isActive = true
         heightConstraint = h
 
-        configureBar()
+        configureBar(language: lang)
         rebuildKeys()
 
-        // Calienta el corrector en segundo plano para que la primera revision no se note
-        DispatchQueue.global(qos: .utility).async {
-            let warm = UITextChecker()
-            _ = warm.rangeOfMisspelledWord(in: "hola", range: NSRange(location: 0, length: 4), startingAt: 0, wrap: false, language: "es_ES")
-            _ = warm.rangeOfMisspelledWord(in: "hello", range: NSRange(location: 0, length: 5), startingAt: 0, wrap: false, language: "en_US")
+        // El diccionario se carga en segundo plano: el teclado aparece al instante.
+        engine.whenReady { [weak self] in
+            self?.engineReady = true
         }
     }
 
@@ -108,6 +94,12 @@ final class KeyboardViewController: UIInputViewController {
         super.viewWillAppear(animated)
         lastKind = .other
         updateAutoShift()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        commitComposition()
+        engine.persistNow()
     }
 
     override func viewWillLayoutSubviews() {
@@ -140,14 +132,13 @@ final class KeyboardViewController: UIInputViewController {
     private func handleContextChange() {
         if Date().timeIntervalSince(lastProxyOp) < 0.35 { return }
         lastKind = .other
-        scheduleAutoShift()
-        scheduleSpellCheck(delay: 0.25)
+        if slots.isEmpty { scheduleAutoShift() }
     }
 
-    // MARK: - Barra de correcciones
+    // MARK: - Barra de candidatas
 
-    private func configureBar() {
-        canvas.bar.languageButton.setTitle(language.uppercased(), for: .normal)
+    private func configureBar(language: Language) {
+        canvas.bar.languageButton.setTitle(language.rawValue.uppercased(), for: .normal)
         canvas.bar.languageButton.addAction(UIAction { [weak self] _ in
             self?.toggleLanguage()
         }, for: .touchUpInside)
@@ -157,173 +148,27 @@ final class KeyboardViewController: UIInputViewController {
         canvas.bar.languageButton.addGestureRecognizer(hold)
 
         canvas.bar.onSelect = { [weak self] index in
-            self?.selectBarItem(index)
+            self?.selectCandidate(index)
         }
     }
 
     @objc private func handleLanguageHold(_ gesture: UILongPressGestureRecognizer) {
         if gesture.state == .began {
-            learned.removeAll()
-            UserDefaults.standard.removeObject(forKey: "learnedWords.v2")
-            clearFlag()
-            canvas.bar.showMessage("Palabras guardadas borradas")
+            engine.resetLearned()
+            canvas.bar.showMessage("Palabras aprendidas borradas")
         }
     }
 
     private func toggleLanguage() {
-        language = (language == "es") ? "en" : "es"
-        UserDefaults.standard.set(language, forKey: "language")
-        canvas.bar.languageButton.setTitle(language.uppercased(), for: .normal)
-        resolveSpellLanguage()
-        if spellCode == nil {
-            canvas.bar.showMessage("Sin corrector para este idioma")
-        } else {
-            scheduleSpellCheck(delay: 0.05)
+        commitComposition()
+        let next: Language = (engine.language == Language.es) ? Language.en : Language.es
+        engineReady = false
+        engine.setLanguage(next)
+        UserDefaults.standard.set(next.rawValue, forKey: "language")
+        canvas.bar.languageButton.setTitle(next.rawValue.uppercased(), for: .normal)
+        engine.whenReady { [weak self] in
+            self?.engineReady = true
         }
-    }
-
-    private func resolveSpellLanguage() {
-        let available = UITextChecker.availableLanguages
-        let prefs: [String] = (language == "es")
-            ? ["es_CL", "es_MX", "es_ES", "es_US", "es"]
-            : ["en_US", "en_GB", "en"]
-        var found: String?
-        for p in prefs {
-            for a in available where a.replacingOccurrences(of: "-", with: "_") == p {
-                found = a
-                break
-            }
-            if found != nil { break }
-        }
-        if found == nil {
-            for a in available where a.lowercased().hasPrefix(language) {
-                found = a
-                break
-            }
-        }
-        spellCode = found
-    }
-
-    private func scheduleSpellCheck(delay: TimeInterval) {
-        spellWork?.cancel()
-        let work = DispatchWorkItem { [weak self] in
-            self?.runSpellCheck()
-        }
-        spellWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
-    }
-
-    private func clearFlag() {
-        if flaggedWord == nil { return }
-        flaggedWord = nil
-        flaggedSuggestions = []
-        canvas.bar.flagFirst = false
-        canvas.bar.update(candidates: [], current: -1)
-    }
-
-    /// Devuelve la ultima palabra antes del cursor (si acaba de terminar con un espacio, tambien).
-    private func trailingWord(in context: String) -> (word: String, trailing: String)? {
-        var chars = Array(context.suffix(60))
-        var trailing = ""
-        if let last = chars.last, last == " " {
-            trailing = " "
-            chars.removeLast()
-        }
-        var word: [Character] = []
-        var i = chars.count - 1
-        while i >= 0 {
-            let c = chars[i]
-            if c.isLetter || c == "'" || c == "\u{2019}" {
-                word.append(c)
-                i -= 1
-            } else {
-                break
-            }
-        }
-        word.reverse()
-        while let f = word.first, f == "'" || f == "\u{2019}" { word.removeFirst() }
-        while let l = word.last, l == "'" || l == "\u{2019}" { word.removeLast() }
-        if word.count < 2 { return nil }
-        // Direcciones de correo, usuarios, etc.
-        if i >= 0 {
-            let before = chars[i]
-            if before == "@" || before == "/" || before == "#" || before.isNumber { return nil }
-        }
-        // iPhone, NASA, etc.: se dejan en paz
-        for c in word.dropFirst() where c.isUppercase { return nil }
-        return (String(word), trailing)
-    }
-
-    private func matchCase(_ guess: String, like word: String) -> String {
-        if word.count > 1 && word == word.uppercased() { return guess.uppercased() }
-        if let f = word.first, f.isUppercase {
-            return guess.prefix(1).uppercased() + String(guess.dropFirst())
-        }
-        return guess
-    }
-
-    private func runSpellCheck() {
-        spellWork = nil
-        guard activeLayer == .letters, let code = spellCode else {
-            clearFlag()
-            return
-        }
-        let context = textDocumentProxy.documentContextBeforeInput ?? ""
-        guard let found = trailingWord(in: context) else {
-            clearFlag()
-            return
-        }
-        let word = found.word
-        if learned.contains(word.lowercased()) {
-            clearFlag()
-            return
-        }
-        let length = (word as NSString).length
-        let range = checker.rangeOfMisspelledWord(in: word, range: NSRange(location: 0, length: length), startingAt: 0, wrap: false, language: code)
-        if range.location == NSNotFound {
-            clearFlag()
-            return
-        }
-        let guesses = checker.guesses(forWordRange: range, in: word, language: code) ?? []
-        var list: [String] = []
-        for g in guesses {
-            let cased = matchCase(g, like: word)
-            if cased != word && !list.contains(cased) {
-                list.append(cased)
-            }
-            if list.count == 3 { break }
-        }
-        flaggedWord = word
-        flaggedTrailing = found.trailing
-        flaggedSuggestions = list
-        canvas.bar.flagFirst = true
-        canvas.bar.update(candidates: [word] + list, current: -1)
-    }
-
-    /// Posicion 0: la palabra tal cual (al tocarla se guarda como correcta). Las demas: correcciones.
-    private func selectBarItem(_ index: Int) {
-        guard let word = flaggedWord else { return }
-        if index == 0 {
-            learned.insert(word.lowercased())
-            UserDefaults.standard.set(Array(learned), forKey: "learnedWords.v2")
-            clearFlag()
-            canvas.bar.showMessage("\"\(word)\" guardada como correcta")
-            return
-        }
-        let i = index - 1
-        if i < 0 || i >= flaggedSuggestions.count { return }
-        let replacement = flaggedSuggestions[i]
-        let count = word.count + flaggedTrailing.count
-        for _ in 0..<count {
-            textDocumentProxy.deleteBackward()
-        }
-        textDocumentProxy.insertText(replacement + " ")
-        let now = Date()
-        lastProxyOp = now
-        lastSpaceTime = now
-        lastKind = .spaceAfterWord
-        clearFlag()
-        scheduleAutoShift()
     }
 
     // MARK: - Construccion de teclas
@@ -361,17 +206,16 @@ final class KeyboardViewController: UIInputViewController {
         return b
     }
 
-    private func makeLetterKey(_ letters: [Character]) -> KeyButton {
+    private func makeLetterKey(_ id: Character) -> KeyButton {
         let b = makeKey(title: nil, symbol: nil, kind: .letter)
-        b.keyId = letters.first
-        b.letters = letters
-        b.addAction(UIAction { [weak self, weak b] _ in
-            guard let self = self, let b = b else { return }
-            let idx = b.letterIndex(forX: b.lastTouchX)
-            self.typeLetter(String(b.letters[idx]))
+        b.keyId = id
+        b.letters = Array(KeyMap.keyLetters[id] ?? "")
+        b.longPressOptions = KeyMap.popupOptions[id] ?? []
+        b.addAction(UIAction { [weak self] _ in
+            self?.pressKey(id)
         }, for: .touchUpInside)
         b.onLongPressChoice = { [weak self] choice in
-            self?.typeLetter(choice.lowercased())
+            self?.pressExplicit(choice)
         }
         b.installLongPress(target: self, action: #selector(handleKeyLongPress(_:)))
         letterKeys.append(b)
@@ -432,15 +276,15 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func lettersRows() -> [[RowItem]] {
-        let row1: [[Character]] = [["q", "w"], ["e", "r"], ["t", "y"], ["u", "i"], ["o", "p"]]
-        let row2: [[Character]] = [["a", "s"], ["d", "f"], ["g", "h"], ["j", "k"], ["l", "\u{00F1}"]]
-        let row3: [[Character]] = [["z", "x"], ["c", "v"], ["b", "n"], ["m"]]
+        let row1: [Character] = ["Q", "E", "T", "U", "O"]
+        let row2: [Character] = ["A", "D", "G", "J", "L"]
+        let row3: [Character] = ["Z", "C", "B", "M"]
 
         var r1: [RowItem] = []
-        for l in row1 { r1.append(RowItem(view: makeLetterKey(l), weight: 1.0)) }
+        for id in row1 { r1.append(RowItem(view: makeLetterKey(id), weight: 1.0)) }
 
         var r2: [RowItem] = []
-        for l in row2 { r2.append(RowItem(view: makeLetterKey(l), weight: 1.0)) }
+        for id in row2 { r2.append(RowItem(view: makeLetterKey(id), weight: 1.0)) }
 
         let shiftKey = makeKey(title: nil, symbol: "shift", kind: .function)
         shiftKey.addAction(UIAction { [weak self] _ in
@@ -449,16 +293,16 @@ final class KeyboardViewController: UIInputViewController {
         shiftButton = shiftKey
 
         var r3: [RowItem] = [RowItem(view: shiftKey, weight: 1.4)]
-        for l in row3 { r3.append(RowItem(view: makeLetterKey(l), weight: 1.0)) }
+        for id in row3 { r3.append(RowItem(view: makeLetterKey(id), weight: 1.0)) }
         r3.append(RowItem(view: makeBackspaceKey(), weight: 1.4))
 
-        let comma = makeKey(title: ",", symbol: nil, kind: .letter)
-        comma.addAction(UIAction { [weak self] _ in
-            self?.insertSymbol(",")
+        let rotate = makeKey(title: nil, symbol: "arrow.triangle.2.circlepath", kind: .function)
+        rotate.addAction(UIAction { [weak self] _ in
+            self?.rotate()
         }, for: .touchUpInside)
 
         let punct = makeKey(title: ".", symbol: nil, kind: .letter)
-        punct.longPressOptions = [".", "?", "!", "\u{00BF}", "\u{00A1}", "'"]
+        punct.longPressOptions = [".", ",", "?", "!", "\u{00BF}", "\u{00A1}", "'"]
         punct.addAction(UIAction { [weak self] _ in
             self?.insertSymbol(".")
         }, for: .touchUpInside)
@@ -470,7 +314,7 @@ final class KeyboardViewController: UIInputViewController {
         let r4: [RowItem] = [
             RowItem(view: makeLayerKey(title: "123", target: .numbers), weight: 1.3),
             RowItem(view: makeGlobeKey(), weight: 1.0),
-            RowItem(view: comma, weight: 1.0),
+            RowItem(view: rotate, weight: 1.2),
             RowItem(view: makeSpaceKey(), weight: 4.0),
             RowItem(view: punct, weight: 1.0),
             RowItem(view: makeReturnKey(), weight: 1.5)
@@ -510,8 +354,8 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func switchLayer(_ target: Layer) {
+        commitComposition()
         activeLayer = target
-        clearFlag()
         rebuildKeys()
         if target == .letters {
             updateAutoShift()
@@ -525,16 +369,10 @@ final class KeyboardViewController: UIInputViewController {
         let location = gesture.location(in: canvas)
         switch gesture.state {
         case .began:
-            var base = key.longPressOptions
-            if !key.letters.isEmpty {
-                let idx = key.letterIndex(forX: gesture.location(in: key).x)
-                let letter = key.letters[idx]
-                base = KeyboardViewController.accents[letter] ?? []
-            }
-            if base.isEmpty { return }
+            if key.longPressOptions.isEmpty { return }
             popupStartX = location.x
             let upper = (shift != .off) && key.keyId != nil
-            let options = base.map { upper ? $0.uppercased() : $0 }
+            let options = key.longPressOptions.map { upper ? $0.uppercased() : $0 }
             canvas.showPopup(options: options, above: key)
         case .changed:
             canvas.popup.updateSelection(dx: location.x - popupStartX)
@@ -549,33 +387,171 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    // MARK: - Escritura
+    // MARK: - Palabra en curso (solo en la barra)
 
-    private func typeLetter(_ lower: String) {
-        clearFlag()
-        let text = (shift == .off) ? lower : lower.uppercased()
-        textDocumentProxy.insertText(text)
-        lastProxyOp = Date()
-        lastKind = .letter
-        if shift == .once {
-            shift = .off
-            refreshShiftAppearance()
-            refreshLetterTitles()
-        }
-        scheduleSpellCheck(delay: 0.35)
+    private func pressKey(_ id: Character) {
+        lastKind = .other
+        beginWordIfNeeded()
+        slots.append(Slot.key(id))
+        refreshSuggestions()
     }
 
-    private func pressSpace() {
+    private func pressExplicit(_ text: String) {
+        guard let c = text.lowercased().first else { return }
+        lastKind = .other
+        beginWordIfNeeded()
+        slots.append(Slot.letter(c))
+        refreshSuggestions()
+    }
+
+    private func beginWordIfNeeded() {
+        if slots.isEmpty {
+            wordCase = shift
+            if shift == .once {
+                shift = .off
+                refreshShiftAppearance()
+                refreshLetterTitles()
+            }
+        }
+    }
+
+    private func refreshSuggestions() {
+        suggestions = engine.suggest(slots, previous: nil, includeFuzzy: false)
+        candidateIndex = 0
+        fuzzyComputed = false
+        updateBar()
+        scheduleIdleWork()
+    }
+
+    private func capitalizedFirst(_ word: String) -> String {
+        return word.prefix(1).uppercased() + String(word.dropFirst())
+    }
+
+    private func applyCase(_ word: String) -> String {
+        switch wordCase {
+        case .off:
+            return word
+        case .locked:
+            return word.uppercased()
+        case .once:
+            return capitalizedFirst(word)
+        }
+    }
+
+    private func currentWord() -> String {
+        if candidateIndex >= 0 && candidateIndex < suggestions.words.count {
+            return suggestions.words[candidateIndex]
+        }
+        return ""
+    }
+
+    private func updateBar() {
+        if slots.isEmpty {
+            canvas.bar.update(candidates: [], current: -1)
+            return
+        }
+        var shown: [String] = []
+        for w in suggestions.words {
+            shown.append(applyCase(w))
+        }
+        canvas.bar.update(candidates: shown, current: candidateIndex)
+    }
+
+    /// La autocorreccion (lo mas pesado del motor) se calcula solo cuando haces una pausa.
+    private func scheduleIdleWork() {
+        idleWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.extendWithFuzzy()
+        }
+        idleWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
+    }
+
+    private func extendWithFuzzy() {
+        idleWork = nil
+        if fuzzyComputed || slots.isEmpty { return }
+        fuzzyComputed = true
+        let full = engine.suggest(slots, previous: nil, includeFuzzy: true)
+        let head = Array(full.words.prefix(suggestions.words.count))
+        if candidateIndex == 0 || head == suggestions.words {
+            suggestions = full
+            if candidateIndex >= suggestions.words.count {
+                candidateIndex = 0
+            }
+            updateBar()
+        }
+    }
+
+    private func rotate() {
+        if slots.isEmpty { return }
+        lastKind = .other
+        idleWork?.cancel()
+        extendWithFuzzy()
+        if suggestions.words.count >= 2 {
+            candidateIndex = (candidateIndex + 1) % suggestions.words.count
+            updateBar()
+        }
+    }
+
+    private func selectCandidate(_ index: Int) {
+        if slots.isEmpty || index < 0 || index >= suggestions.words.count { return }
+        candidateIndex = index
+        commitComposition()
+        textDocumentProxy.insertText(" ")
         let now = Date()
-        clearFlag()
-        if lastKind == .spaceAfterWord && now.timeIntervalSince(lastSpaceTime) < 0.7 {
+        lastProxyOp = now
+        lastSpaceTime = now
+        lastKind = .spaceAfterWord
+        scheduleAutoShift()
+    }
+
+    /// Escribe la palabra en el campo (una sola vez), la aprende y deja la barra vacia.
+    private func commitComposition() {
+        if slots.isEmpty { return }
+        idleWork?.cancel()
+        idleWork = nil
+        var word = currentWord()
+        var allExplicit = true
+        for slot in slots {
+            if case Slot.key = slot {
+                allExplicit = false
+            }
+        }
+        let deliberate = suggestions.isLiteral && allExplicit
+        if deliberate && wordCase == .once {
+            word = capitalizedFirst(word)
+        }
+        textDocumentProxy.insertText(applyCase(word))
+        lastProxyOp = Date()
+        lastKind = .letter
+        engine.learn(word, previous: nil, allowNew: deliberate)
+        resetComposition()
+    }
+
+    private func resetComposition() {
+        idleWork?.cancel()
+        idleWork = nil
+        slots.removeAll()
+        suggestions = Suggestions(words: [], isLiteral: false)
+        candidateIndex = 0
+        wordCase = .off
+        fuzzyComputed = false
+        updateBar()
+    }
+
+    // MARK: - Teclas de accion
+
+    private func pressSpace() {
+        let wasComposing = !slots.isEmpty
+        commitComposition()
+        let now = Date()
+        if !wasComposing && lastKind == .spaceAfterWord && now.timeIntervalSince(lastSpaceTime) < 0.7 {
             // Doble espacio: el espacio pasa a ser punto y espacio
             textDocumentProxy.deleteBackward()
             textDocumentProxy.insertText(". ")
             lastProxyOp = now
             lastSpaceTime = now
             lastKind = .spaceOther
-            spellWork?.cancel()
             if activeLayer != .letters {
                 activeLayer = .letters
                 rebuildKeys()
@@ -590,43 +566,47 @@ final class KeyboardViewController: UIInputViewController {
         textDocumentProxy.insertText(" ")
         lastProxyOp = now
         lastSpaceTime = now
-        lastKind = (lastKind == .letter) ? .spaceAfterWord : .spaceOther
+        lastKind = (wasComposing || lastKind == .letter) ? .spaceAfterWord : .spaceOther
         if activeLayer != .letters {
             activeLayer = .letters
             rebuildKeys()
         }
-        scheduleSpellCheck(delay: 0.08)
         scheduleAutoShift()
     }
 
     private func pressReturn() {
-        clearFlag()
+        commitComposition()
         textDocumentProxy.insertText("\n")
         lastProxyOp = Date()
         lastKind = .other
-        spellWork?.cancel()
         scheduleAutoShift()
     }
 
     private func insertSymbol(_ s: String) {
-        clearFlag()
+        commitComposition()
         textDocumentProxy.insertText(s)
         lastProxyOp = Date()
         lastKind = (s.first?.isNumber ?? false) ? .letter : .other
-        spellWork?.cancel()
         scheduleAutoShift()
     }
 
     private func pressBackspace() {
+        lastKind = .other
+        if !slots.isEmpty {
+            slots.removeLast()
+            if slots.isEmpty {
+                resetComposition()
+            } else {
+                refreshSuggestions()
+            }
+            return
+        }
         textDocumentProxy.deleteBackward()
         lastProxyOp = Date()
-        lastKind = .other
-        scheduleSpellCheck(delay: 0.35)
         scheduleAutoShift()
     }
 
     private func backspaceDown() {
-        clearFlag()
         pressBackspace()
         backspaceUp()
         let delay = Timer(timeInterval: 0.45, repeats: false) { [weak self] _ in
@@ -651,6 +631,12 @@ final class KeyboardViewController: UIInputViewController {
     // MARK: - Mayusculas
 
     private func pressShift() {
+        if !slots.isEmpty {
+            // En medio de una palabra: alterna entre Mayuscula inicial y minuscula
+            wordCase = (wordCase == .off) ? ShiftState.once : ShiftState.off
+            updateBar()
+            return
+        }
         let now = Date()
         switch shift {
         case .off:
@@ -684,7 +670,7 @@ final class KeyboardViewController: UIInputViewController {
         let upper = (shift != .off)
         for key in letterKeys {
             let parts = key.letters.map { upper ? String($0).uppercased() : String($0) }
-            key.setTitle(parts.joined(separator: "  "), for: .normal)
+            key.setTitle(parts.joined(separator: " "), for: .normal)
         }
     }
 
@@ -714,7 +700,7 @@ final class KeyboardViewController: UIInputViewController {
 
     private func updateAutoShift() {
         autoShiftWork = nil
-        if activeLayer != .letters || shift == .locked { return }
+        if activeLayer != .letters || shift == .locked || !slots.isEmpty { return }
         let want = shouldAutoCapitalize()
         if want && shift == .off {
             shift = .once
