@@ -12,21 +12,6 @@ struct SureTypeHostApp: App {
 struct ContentView: View {
     @State private var text = ""
 
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-    }
-}
-
-struct ContentView: View {
-    @State private var text = ""
-
-    private var spellInfo: String {
-        let langs = UITextChecker.availableLanguages.filter { $0.lowercased().hasPrefix("es") || $0.lowercased().hasPrefix("en") }
-        return langs.isEmpty ? "ninguno" : langs.sorted().joined(separator: ", ")
-    }
-
     var body: some View {
         NavigationView {
             ScrollView {
