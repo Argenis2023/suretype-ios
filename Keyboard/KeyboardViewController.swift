@@ -32,9 +32,8 @@ final class KeyboardViewController: UIInputViewController {
     private var lastShiftTap = Date.distantPast
 
     private var engine: SureTypeEngine!
-    private var engineReady = false
 
-    // Palabra en curso: solo vive en la barra hasta que das espacio o eliges una candidata
+    // Palabra en curso: vive en la barra y como texto marcado hasta que das espacio o eliges candidata
     private var slots: [Slot] = []
     private var suggestions = Suggestions(words: [], isLiteral: false)
     private var candidateIndex = 0
@@ -45,9 +44,8 @@ final class KeyboardViewController: UIInputViewController {
     // Contexto: palabra anterior ("<s>" = inicio de frase, nil = desconocida)
     private var previousWord: String? = "<s>"
 
-    // Texto marcado: la palabra en curso se ve en el campo (subrayada) y se actualiza con una sola llamada
+    // Texto marcado: la palabra en curso se ve en el campo (subrayada), una llamada por tecla
     private var markedShown = ""
-    private var markedWork: DispatchWorkItem?
 
     // Tecla pulsada al tocar (para deshacerla si luego se elige una letra exacta con pulsacion larga)
     private var lastTouchKey: Character?
@@ -58,14 +56,12 @@ final class KeyboardViewController: UIInputViewController {
 
     private var autoShiftWork: DispatchWorkItem?
 
-    private var letterKeys: [KeyButton] = []
-    private var shiftButton: KeyButton?
-    private var globeButton: KeyButton?
+    private var letterKeys: [KeyView] = []
+    private var shiftButton: KeyView?
+    private var globeButton: UIButton?
 
     private var backspaceDelayTimer: Timer?
     private var backspaceRepeatTimer: Timer?
-
-    private var popupStartX: CGFloat = 0
 
 
     // MARK: - Ciclo de vida
@@ -91,12 +87,22 @@ final class KeyboardViewController: UIInputViewController {
         h.isActive = true
         heightConstraint = h
 
+        canvas.popupOptionsProvider = { [weak self] key in
+            guard let self = self else { return key.longPressOptions }
+            let upper = (self.shift != .off) && key.keyId != nil
+            return key.longPressOptions.map { upper ? $0.uppercased() : $0 }
+        }
+
         configureBar(language: lang)
         rebuildKeys()
 
-        // El diccionario se carga en segundo plano: el teclado aparece al instante.
-        engine.whenReady { [weak self] in
-            self?.engineReady = true
+        // El diccionario se carga en segundo plano y el teclado aparece al instante.
+        // Si escribes antes de que termine, ves tus letras literales y al estar listo se actualiza la barra.
+        engine.onInstall = { [weak self] in
+            guard let self = self else { return }
+            if !self.slots.isEmpty {
+                self.refreshSuggestions()
+            }
         }
     }
 
@@ -194,13 +200,9 @@ final class KeyboardViewController: UIInputViewController {
     private func toggleLanguage() {
         commitComposition()
         let next: Language = (engine.language == Language.es) ? Language.en : Language.es
-        engineReady = false
         engine.setLanguage(next)
         UserDefaults.standard.set(next.rawValue, forKey: "language")
         canvas.bar.languageButton.setTitle(next.rawValue.uppercased(), for: .normal)
-        engine.whenReady { [weak self] in
-            self?.engineReady = true
-        }
     }
 
     // MARK: - Construccion de teclas
@@ -227,84 +229,84 @@ final class KeyboardViewController: UIInputViewController {
         refreshLetterTitles()
     }
 
-    private func makeKey(title: String?, symbol: String?, kind: KeyKind) -> KeyButton {
-        let b = KeyButton(kind: kind)
-        if let t = title {
-            b.setTitle(t, for: .normal)
-        }
-        if let s = symbol {
-            b.setImage(UIImage(systemName: s), for: .normal)
-        }
-        return b
-    }
-
-    private func makeLetterKey(_ id: Character) -> KeyButton {
-        let b = makeKey(title: nil, symbol: nil, kind: .letter)
-        b.keyId = id
-        b.letters = Array(KeyMap.keyLetters[id] ?? "")
-        b.longPressOptions = KeyMap.popupOptions[id] ?? []
-        b.addAction(UIAction { [weak self] _ in
+    private func makeLetterKey(_ id: Character) -> KeyView {
+        let k = KeyView(kind: .letter)
+        k.keyId = id
+        k.letters = Array(KeyMap.keyLetters[id] ?? "")
+        k.longPressOptions = KeyMap.popupOptions[id] ?? []
+        k.downAction = { [weak self] in
             self?.pressKey(id, fromTouch: true)
-        }, for: .touchDown)
-        b.onLongPressChoice = { [weak self] choice in
-            self?.pressExplicit(choice)
         }
-        b.installLongPress(target: self, action: #selector(handleKeyLongPress(_:)))
-        letterKeys.append(b)
-        return b
+        k.onLongPressChoice = { [weak self] choice in
+            guard let self = self else { return }
+            if self.lastTouchKey == id {
+                self.undoTentativeKey()
+            }
+            self.pressExplicit(choice)
+        }
+        letterKeys.append(k)
+        return k
     }
 
-    private func makeBackspaceKey() -> KeyButton {
-        let b = makeKey(title: nil, symbol: "delete.left", kind: .function)
-        b.addAction(UIAction { [weak self] _ in
+    private func makeBackspaceKey() -> KeyView {
+        let k = KeyView(kind: .function)
+        k.setSymbol("delete.left")
+        k.downAction = { [weak self] in
             self?.backspaceDown()
-        }, for: .touchDown)
-        b.addAction(UIAction { [weak self] _ in
+        }
+        k.upAction = { [weak self] _ in
             self?.backspaceUp()
-        }, for: [.touchUpInside, .touchUpOutside, .touchCancel])
-        return b
+        }
+        return k
     }
 
-    private func makeReturnKey() -> KeyButton {
-        let b = makeKey(title: nil, symbol: "return", kind: .function)
-        b.addAction(UIAction { [weak self] _ in
-            self?.pressReturn()
-        }, for: .touchUpInside)
-        return b
+    private func makeReturnKey() -> KeyView {
+        let k = KeyView(kind: .function)
+        k.setSymbol("return")
+        k.upAction = { [weak self] inside in
+            if inside { self?.pressReturn() }
+        }
+        return k
     }
 
-    private func makeSpaceKey() -> KeyButton {
-        let b = makeKey(title: nil, symbol: nil, kind: .letter)
-        b.setTitle("espacio", for: .normal)
-        b.titleLabel?.font = UIFont.systemFont(ofSize: 16)
-        b.addAction(UIAction { [weak self] _ in
+    private func makeSpaceKey() -> KeyView {
+        let k = KeyView(kind: .letter)
+        k.setTitle("espacio")
+        k.label.font = UIFont.systemFont(ofSize: 16)
+        k.downAction = { [weak self] in
             self?.pressSpace()
-        }, for: .touchDown)
-        return b
+        }
+        return k
     }
 
-    private func makeGlobeKey() -> KeyButton {
-        let b = makeKey(title: nil, symbol: "globe", kind: .function)
+    private func makeGlobeKey() -> UIButton {
+        let b = UIButton(type: .custom)
+        b.setImage(UIImage(systemName: "globe"), for: .normal)
+        b.tintColor = UIColor.label
+        b.backgroundColor = Theme.functionKey
+        b.layer.cornerRadius = 6
         b.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
         globeButton = b
         return b
     }
 
-    private func makeLayerKey(title: String, target: Layer) -> KeyButton {
-        let b = makeKey(title: title, symbol: nil, kind: .function)
-        b.titleLabel?.font = UIFont.systemFont(ofSize: 16)
-        b.addAction(UIAction { [weak self] _ in
-            self?.switchLayer(target)
-        }, for: .touchUpInside)
-        return b
+    private func makeLayerKey(title: String, target: Layer) -> KeyView {
+        let k = KeyView(kind: .function)
+        k.setTitle(title)
+        k.label.font = UIFont.systemFont(ofSize: 16)
+        k.upAction = { [weak self] inside in
+            if inside { self?.switchLayer(target) }
+        }
+        return k
     }
 
-    private func makeSymbolKey(_ s: String) -> KeyButton {
-        let b = makeKey(title: s, symbol: nil, kind: .letter)
-        b.addAction(UIAction { [weak self] _ in
+    private func makeSymbolKey(_ s: String) -> KeyView {
+        let k = KeyView(kind: .letter)
+        k.setTitle(s)
+        k.downAction = { [weak self] in
             self?.insertSymbol(s)
-        }, for: .touchUpInside)
-        return b
+        }
+        return k
     }
 
     private func lettersRows() -> [[RowItem]] {
@@ -318,30 +320,32 @@ final class KeyboardViewController: UIInputViewController {
         var r2: [RowItem] = []
         for id in row2 { r2.append(RowItem(view: makeLetterKey(id), weight: 1.0)) }
 
-        let shiftKey = makeKey(title: nil, symbol: "shift", kind: .function)
-        shiftKey.addAction(UIAction { [weak self] _ in
+        let shiftKey = KeyView(kind: .function)
+        shiftKey.setSymbol("shift")
+        shiftKey.downAction = { [weak self] in
             self?.pressShift()
-        }, for: .touchUpInside)
+        }
         shiftButton = shiftKey
 
         var r3: [RowItem] = [RowItem(view: shiftKey, weight: 1.4)]
         for id in row3 { r3.append(RowItem(view: makeLetterKey(id), weight: 1.0)) }
         r3.append(RowItem(view: makeBackspaceKey(), weight: 1.4))
 
-        let rotate = makeKey(title: nil, symbol: "arrow.triangle.2.circlepath", kind: .function)
-        rotate.addAction(UIAction { [weak self] _ in
+        let rotate = KeyView(kind: .function)
+        rotate.setSymbol("arrow.triangle.2.circlepath")
+        rotate.downAction = { [weak self] in
             self?.rotate()
-        }, for: .touchUpInside)
+        }
 
-        let punct = makeKey(title: ".", symbol: nil, kind: .letter)
+        let punct = KeyView(kind: .letter)
+        punct.setTitle(".")
         punct.longPressOptions = [".", ",", "?", "!", "\u{00BF}", "\u{00A1}", "'"]
-        punct.addAction(UIAction { [weak self] _ in
-            self?.insertSymbol(".")
-        }, for: .touchUpInside)
+        punct.upAction = { [weak self] inside in
+            if inside { self?.insertSymbol(".") }
+        }
         punct.onLongPressChoice = { [weak self] choice in
             self?.insertSymbol(choice)
         }
-        punct.installLongPress(target: self, action: #selector(handleKeyLongPress(_:)))
 
         let r4: [RowItem] = [
             RowItem(view: makeLayerKey(title: "123", target: .numbers), weight: 1.3),
@@ -394,35 +398,7 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    // MARK: - Pulsacion larga (tildes y puntuacion)
-
-    @objc private func handleKeyLongPress(_ gesture: UILongPressGestureRecognizer) {
-        guard let key = gesture.view as? KeyButton else { return }
-        let location = gesture.location(in: canvas)
-        switch gesture.state {
-        case .began:
-            if key.longPressOptions.isEmpty { return }
-            popupStartX = location.x
-            let upper = (shift != .off) && key.keyId != nil
-            let options = key.longPressOptions.map { upper ? $0.uppercased() : $0 }
-            canvas.showPopup(options: options, above: key)
-        case .changed:
-            canvas.popup.updateSelection(dx: location.x - popupStartX)
-        case .ended:
-            let choice = canvas.popup.selectedOption
-            canvas.hidePopup()
-            if let c = choice {
-                if let id = key.keyId, lastTouchKey == id {
-                    undoTentativeKey()
-                }
-                key.onLongPressChoice?(c)
-            }
-        default:
-            canvas.hidePopup()
-        }
-    }
-
-    // MARK: - Palabra en curso (solo en la barra)
+    // MARK: - Palabra en curso (barra + texto marcado)
 
     private func pressKey(_ id: Character, fromTouch: Bool = false) {
         lastKind = .other
@@ -468,30 +444,20 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
+    /// Cada tecla actualiza la barra y el campo al instante (el calculo tarda decimas de milisegundo).
     private func refreshSuggestions() {
         suggestions = engine.suggest(slots, previous: previousWord, includeFuzzy: false)
         candidateIndex = 0
         fuzzyComputed = false
         updateBar()
-        scheduleMarked(delay: 0.12)
+        flushMarked()
         scheduleIdleWork()
     }
 
     // MARK: - Texto marcado (la palabra se ve en el campo)
 
-    private func scheduleMarked(delay: TimeInterval) {
-        markedWork?.cancel()
-        let work = DispatchWorkItem { [weak self] in
-            self?.flushMarked()
-        }
-        markedWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
-    }
-
     /// Deja en el campo la candidata actual, con una sola llamada.
     private func flushMarked() {
-        markedWork?.cancel()
-        markedWork = nil
         let target = slots.isEmpty ? "" : applyCase(currentWord())
         if target == markedShown { return }
         if target.isEmpty {
@@ -538,14 +504,15 @@ final class KeyboardViewController: UIInputViewController {
         canvas.bar.update(candidates: shown, current: candidateIndex)
     }
 
-    /// La autocorreccion (lo mas pesado del motor) se calcula solo cuando haces una pausa.
+    /// La autocorreccion (lo mas pesado del motor) se calcula solo cuando haces una pausa
+    /// y solo agrega candidatas al final: lo que ya se ve en el campo no cambia solo.
     private func scheduleIdleWork() {
         idleWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             self?.extendWithFuzzy()
         }
         idleWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
     }
 
     private func extendWithFuzzy() {
@@ -560,7 +527,6 @@ final class KeyboardViewController: UIInputViewController {
                 candidateIndex = 0
             }
             updateBar()
-            flushMarked()
         }
     }
 
@@ -619,8 +585,6 @@ final class KeyboardViewController: UIInputViewController {
     private func resetComposition(touchField: Bool) {
         idleWork?.cancel()
         idleWork = nil
-        markedWork?.cancel()
-        markedWork = nil
         if touchField && !markedShown.isEmpty {
             textDocumentProxy.setMarkedText("", selectedRange: NSRange(location: 0, length: 0))
             textDocumentProxy.unmarkText()
@@ -740,7 +704,7 @@ final class KeyboardViewController: UIInputViewController {
             // En medio de una palabra: alterna entre Mayuscula inicial y minuscula
             wordCase = (wordCase == .off) ? ShiftState.once : ShiftState.off
             updateBar()
-            scheduleMarked(delay: 0.05)
+            flushMarked()
             return
         }
         let now = Date()
@@ -761,13 +725,13 @@ final class KeyboardViewController: UIInputViewController {
         guard let b = shiftButton else { return }
         switch shift {
         case .off:
-            b.setImage(UIImage(systemName: "shift"), for: .normal)
+            b.setSymbol("shift")
             b.isActiveKey = false
         case .once:
-            b.setImage(UIImage(systemName: "shift.fill"), for: .normal)
+            b.setSymbol("shift.fill")
             b.isActiveKey = true
         case .locked:
-            b.setImage(UIImage(systemName: "capslock.fill"), for: .normal)
+            b.setSymbol("capslock.fill")
             b.isActiveKey = true
         }
     }
@@ -776,7 +740,7 @@ final class KeyboardViewController: UIInputViewController {
         let upper = (shift != .off)
         for key in letterKeys {
             let parts = key.letters.map { upper ? String($0).uppercased() : String($0) }
-            key.setTitle(parts.joined(separator: " "), for: .normal)
+            key.setTitle(parts.joined(separator: " "))
         }
     }
 

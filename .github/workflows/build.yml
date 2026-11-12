@@ -37,6 +37,9 @@ jobs:
         run: |
           APP="build/Build/Products/Release-iphoneos/SureType.app"
           test -d "$APP/PlugIns/SureTypeKeyboard.appex" || (echo "Falta la extension del teclado dentro de la app" && exit 1)
+          for f in dict_es.bin dict_en.bin bigram_es.bin bigram_en.bin; do
+            test -f "$APP/PlugIns/SureTypeKeyboard.appex/$f" || (echo "Falta $f dentro de la extension" && exit 1)
+          done
           mkdir -p Payload
           cp -R "$APP" Payload/
           zip -qry SureType.ipa Payload

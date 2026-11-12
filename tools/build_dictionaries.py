@@ -162,12 +162,43 @@ def build(lang: str):
     rows = rows[:45000]
     rows.sort(key=lambda r: (r[0], -r[2]))
     OUT.mkdir(parents=True, exist_ok=True)
-    path = OUT / f"dict_{lang}.txt"
-    with path.open("w", encoding="utf-8", newline="\n") as f:
-        for keys, disp, c in rows:
-            f.write(f"{keys}\t{disp}\t{c}\n")
+    path = OUT / f"dict_{lang}.bin"
+    write_dict_bin(path, rows)
     print(f"{lang}: {len(rows)} palabras -> {path}")
     return rows
+
+
+def write_dict_bin(path: Path, rows):
+    """Formato binario compacto que el teclado carga en milisegundos.
+
+    magic "STD2" | count u32 |
+    seqOffsets u32 x (count+1) | wordOffsets u32 x (count+1) |
+    freqs f32 x count (ln(c+1)) | seqBlob ascii | wordBlob utf8
+    Todo little-endian. Ordenado por secuencia (ascii) y dentro de cada
+    secuencia por frecuencia descendente.
+    """
+    import struct
+
+    seq_blob = bytearray()
+    word_blob = bytearray()
+    seq_offsets = [0]
+    word_offsets = [0]
+    freqs = []
+    for keys, disp, c in rows:
+        seq_blob += keys.encode("ascii")
+        word_blob += disp.encode("utf-8")
+        seq_offsets.append(len(seq_blob))
+        word_offsets.append(len(word_blob))
+        freqs.append(math.log(c + 1.0))
+    n = len(rows)
+    with path.open("wb") as f:
+        f.write(b"STD2")
+        f.write(struct.pack("<I", n))
+        f.write(struct.pack(f"<{n + 1}I", *seq_offsets))
+        f.write(struct.pack(f"<{n + 1}I", *word_offsets))
+        f.write(struct.pack(f"<{n}f", *freqs))
+        f.write(bytes(seq_blob))
+        f.write(bytes(word_blob))
 
 
 def preview(rows, words):

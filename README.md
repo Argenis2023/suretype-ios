@@ -6,11 +6,11 @@ Teclado personal estilo SureType (el de las BlackBerry): 2 letras por tecla y un
 
 Teclado estilo SureType (2 letras por tecla: QW · ER · TY · UI · OP / AS · DF · GH · JK · LÑ / ZX · CV · BN · M). Pulsas cada tecla una vez por letra y el teclado adivina la palabra que estás escribiendo. No propone la palabra siguiente.
 
-- **Rápido:** la palabra en curso se ve subrayada en el campo y se actualiza con una sola llamada, después de una pausa de una décima de segundo. Las teclas responden al tocar, no al soltar. El cálculo de cada pulsación toma menos de una décima de milisegundo (banco de pruebas en `tools/bench`).
-- **Contexto:** la palabra anterior ayuda a elegir (por ejemplo entre "su" y "si"), y las palabras que eliges suben de prioridad.
+- **Rápido:** las teclas responden al tocar, no al soltar, con el clic del sistema, y manejan los toques directamente (puedes pulsar la siguiente tecla antes de soltar la anterior). La palabra en curso se ve subrayada en el campo y se actualiza al instante con cada tecla. Los diccionarios son archivos binarios que se cargan en milisegundos al abrir el teclado, y si escribes antes de que terminen de cargar no se congela nada: ves tus letras y la barra se completa sola.
+- **Contexto:** la palabra anterior ayuda a elegir (por ejemplo entre "su" y "si").
 - **Candidatas:** la barra muestra la mejor opción resaltada y otras al lado. La tecla de flechas circulares rota entre ellas. Espacio acepta la resaltada.
 - **Diccionario:** español e inglés (unas 45.000 palabras cada uno), por frecuencia. El botón ES/EN cambia de idioma.
-- **Aprende:** las palabras que eliges suben de prioridad. Las palabras nuevas (nombres) se aprenden si las deletreas con pulsación larga, letra por letra.
+- **Aprende:** como el SureType real, la última palabra que elegiste para una combinación de teclas pasa a ser la primera opción la próxima vez (corriges una vez y queda corregido). Las palabras que usas suben de prioridad y las nuevas (nombres) se aprenden si las deletreas con pulsación larga, letra por letra.
 - **Autocorrección:** si pulsas una tecla vecina por error, o dos teclas intercambiadas, las palabras que sí existen aparecen al final de la lista.
 - **Tildes y ñ:** mantén pulsada una tecla y desliza para elegir la letra exacta (a, á, s / u, ú, ü, i, í / l, ñ ...).
 - **Doble espacio:** dos toques rápidos al espacio ponen punto y espacio, y la siguiente letra sale en mayúscula.
@@ -62,7 +62,7 @@ Con una cuenta Apple gratuita la firma dura 7 días. Cuando el teclado deje de a
 
 ## Cambiar o ampliar el diccionario
 
-Edita `tools/build_dictionaries.py` (listas `ES_EXTRA` y `EN_EXTRA` para agregar palabras con una frecuencia), ejecuta `python tools/build_dictionaries.py --preview` y vuelve a subir los cambios. Con eso se regeneran `Keyboard/Resources/dict_es.txt` y `dict_en.txt`. Si cambias la distribución de teclas hay que cambiarla igual en `KEY_LETTERS` (Python) y en `KeyMap` (`Keyboard/SureTypeEngine.swift`).
+Edita `tools/build_dictionaries.py` (listas `ES_EXTRA` y `EN_EXTRA` para agregar palabras con una frecuencia), ejecuta `python tools/build_dictionaries.py` y luego `python tools/bigrams_to_bin.py`, y vuelve a subir los cambios. Con eso se regeneran los archivos binarios `Keyboard/Resources/dict_XX.bin` y `bigram_XX.bin`, que son lo que carga el teclado. Si cambias la distribución de teclas hay que cambiarla igual en `KEY_LETTERS` (Python) y en `KeyMap` (`Keyboard/SureTypeEngine.swift`).
 
 ## Banco de pruebas del motor
 
@@ -77,4 +77,4 @@ En Actions, el flujo "Banco de pruebas del motor" (ejecución manual) compila el
 
 ## Créditos
 
-Las listas de frecuencia vienen de [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), basadas en OpenSubtitles, bajo licencia CC BY-SA 4.0. Los archivos `dict_es.txt` y `dict_en.txt` son una versión filtrada de esas listas y heredan esa licencia.
+Las listas de frecuencia vienen de [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords), basadas en OpenSubtitles, bajo licencia CC BY-SA 4.0. Los archivos `dict_es.bin` y `dict_en.bin` son una versión filtrada de esas listas y heredan esa licencia.

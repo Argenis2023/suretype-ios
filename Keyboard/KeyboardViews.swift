@@ -21,35 +21,52 @@ enum KeyKind {
     case function
 }
 
-final class KeyButton: UIButton {
+/// Tecla pasiva: no recibe toques (los maneja el lienzo), solo se dibuja.
+/// Asi no hay nada del aparataje de UIButton entre el dedo y la accion.
+final class KeyView: UIView {
     var kind: KeyKind {
         didSet { updateColors() }
     }
     var isActiveKey: Bool = false {
         didSet { updateColors() }
     }
+    var isPressed: Bool = false {
+        didSet { updateColors() }
+    }
     var keyId: Character?
-    /// Letras de la tecla (SureType: dos por tecla). Mitad izquierda = primera, derecha = segunda.
     var letters: [Character] = []
-    private(set) var lastTouchX: CGFloat = 0
     var longPressOptions: [String] = []
+
+    /// Acciones que conecta el controlador. `up` recibe true si el dedo termino sobre la tecla.
+    var downAction: (() -> Void)?
+    var upAction: ((Bool) -> Void)?
     var onLongPressChoice: ((String) -> Void)?
+
+    let label = UILabel()
+    private let imageView = UIImageView()
 
     init(kind: KeyKind) {
         self.kind = kind
         super.init(frame: CGRect.zero)
+        isUserInteractionEnabled = false
         layer.cornerRadius = 6
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOffset = CGSize(width: 0, height: 1)
         layer.shadowOpacity = 0.25
         layer.shadowRadius = 0
-        titleLabel?.font = UIFont.systemFont(ofSize: 20)
-        titleLabel?.adjustsFontSizeToFitWidth = true
-        titleLabel?.minimumScaleFactor = 0.6
-        setTitleColor(UIColor.label, for: .normal)
-        tintColor = UIColor.label
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)
-        setPreferredSymbolConfiguration(config, forImageIn: .normal)
+
+        label.font = UIFont.systemFont(ofSize: 20)
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.6
+        label.textAlignment = .center
+        label.textColor = UIColor.label
+        addSubview(label)
+
+        imageView.contentMode = .center
+        imageView.tintColor = UIColor.label
+        imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)
+        addSubview(imageView)
+
         updateColors()
     }
 
@@ -57,39 +74,27 @@ final class KeyButton: UIButton {
         fatalError("init(coder:) no se usa")
     }
 
+    func setTitle(_ text: String?) {
+        label.text = text
+    }
+
+    func setSymbol(_ name: String?) {
+        imageView.image = name.flatMap { UIImage(systemName: $0) }
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
-        // Sin camino de sombra, iOS recalcula la sombra de cada tecla en cada toque (lento)
+        label.frame = bounds
+        imageView.frame = bounds
+        // Sin camino de sombra, iOS recalcula la sombra de cada tecla en cada cambio (lento)
         layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: layer.cornerRadius).cgPath
-    }
-
-    override func beginTracking(_ touch: UITouch, with event: UIEvent?) -> Bool {
-        lastTouchX = touch.location(in: self).x
-        return super.beginTracking(touch, with: event)
-    }
-
-    /// Indice de la letra segun la mitad de la tecla donde esta el dedo
-    func letterIndex(forX x: CGFloat) -> Int {
-        if letters.count < 2 { return 0 }
-        return x >= bounds.midX ? 1 : 0
-    }
-
-    override var isHighlighted: Bool {
-        didSet { updateColors() }
     }
 
     private func updateColors() {
         let isLetterStyle = (kind == .letter) || isActiveKey
         let base: UIColor = isLetterStyle ? Theme.letterKey : Theme.functionKey
         let pressed: UIColor = isLetterStyle ? Theme.functionKey : Theme.letterKey
-        backgroundColor = isHighlighted ? pressed : base
-    }
-
-    func installLongPress(target: Any?, action: Selector?) {
-        let recognizer = UILongPressGestureRecognizer(target: target, action: action)
-        recognizer.minimumPressDuration = 0.28
-        recognizer.allowableMovement = 500
-        addGestureRecognizer(recognizer)
+        backgroundColor = isPressed ? pressed : base
     }
 }
 
@@ -178,8 +183,6 @@ final class SuggestionBar: UIView {
     private var windowStart = 0
     private let slotCount = 4
     var onSelect: ((Int) -> Void)?
-    /// Si es true, la primera casilla es una palabra mal escrita y se muestra en rojo
-    var flagFirst = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -238,7 +241,6 @@ final class SuggestionBar: UIView {
             if idx < candidates.count {
                 let isCurrent = (idx == current)
                 b.setTitle(candidates[idx], for: .normal)
-                b.setTitleColor((flagFirst && idx == 0) ? UIColor.systemRed : UIColor.label, for: .normal)
                 b.titleLabel?.font = isCurrent ? UIFont.boldSystemFont(ofSize: 17) : UIFont.systemFont(ofSize: 17)
                 b.backgroundColor = isCurrent ? Theme.letterKey : UIColor.clear
                 b.isHidden = false
@@ -259,21 +261,38 @@ final class SuggestionBar: UIView {
     }
 }
 
-// MARK: - Lienzo con las filas de teclas
+// MARK: - Lienzo con las filas de teclas (maneja los toques directamente)
 
 struct RowItem {
     let view: UIView
     let weight: CGFloat
 }
 
-final class KeyboardCanvas: UIView {
+final class KeyboardCanvas: UIView, UIInputViewAudioFeedback {
     let bar = SuggestionBar()
     let popup = LetterPopup()
     var barHeight: CGFloat = 40
     private var rows: [[RowItem]] = []
 
+    /// Habilita el clic del sistema al tocar teclas (no necesita Acceso total).
+    var enableInputClicksWhenVisible: Bool { return true }
+
+    /// El controlador pone aqui como se muestran las opciones de pulsacion larga (mayusculas, etc.)
+    var popupOptionsProvider: ((KeyView) -> [String])?
+
+    // Toques en curso
+    private final class TouchState {
+        let key: KeyView
+        var longPressTimer: Timer?
+        var popupShown = false
+        var startX: CGFloat = 0
+        init(key: KeyView) { self.key = key }
+    }
+    private var touches: [UITouch: TouchState] = [:]
+
     override init(frame: CGRect) {
         super.init(frame: frame)
+        isMultipleTouchEnabled = true
         addSubview(bar)
         popup.isHidden = true
         addSubview(popup)
@@ -287,6 +306,7 @@ final class KeyboardCanvas: UIView {
         for row in rows {
             for item in row { item.view.removeFromSuperview() }
         }
+        cancelAllTouches()
         rows = newRows
         for row in rows {
             for item in row { insertSubview(item.view, belowSubview: popup) }
@@ -327,6 +347,94 @@ final class KeyboardCanvas: UIView {
             }
         }
         bringSubviewToFront(popup)
+    }
+
+    // MARK: Toques
+
+    /// La tecla bajo el punto (las teclas no reciben toques por si mismas).
+    private func key(at point: CGPoint) -> KeyView? {
+        for row in rows {
+            for item in row {
+                if let k = item.view as? KeyView, !k.isHidden, k.frame.contains(point) {
+                    return k
+                }
+            }
+        }
+        return nil
+    }
+
+    override func touchesBegan(_ touchSet: Set<UITouch>, with event: UIEvent?) {
+        for touch in touchSet {
+            let point = touch.location(in: self)
+            guard let k = key(at: point) else { continue }
+            let state = TouchState(key: k)
+            state.startX = point.x
+            touches[touch] = state
+            k.isPressed = true
+            UIDevice.current.playInputClick()
+            k.downAction?()
+            if !k.longPressOptions.isEmpty {
+                let timer = Timer(timeInterval: 0.30, repeats: false) { [weak self, weak touch] _ in
+                    guard let self = self, let t = touch, let st = self.touches[t] else { return }
+                    st.popupShown = true
+                    st.startX = t.location(in: self).x
+                    let options = self.popupOptionsProvider?(st.key) ?? st.key.longPressOptions
+                    self.showPopup(options: options, above: st.key)
+                }
+                RunLoop.main.add(timer, forMode: RunLoop.Mode.common)
+                state.longPressTimer = timer
+            }
+        }
+    }
+
+    override func touchesMoved(_ touchSet: Set<UITouch>, with event: UIEvent?) {
+        for touch in touchSet {
+            guard let state = touches[touch] else { continue }
+            if state.popupShown {
+                let x = touch.location(in: self).x
+                popup.updateSelection(dx: x - state.startX)
+            }
+        }
+    }
+
+    override func touchesEnded(_ touchSet: Set<UITouch>, with event: UIEvent?) {
+        for touch in touchSet {
+            guard let state = touches.removeValue(forKey: touch) else { continue }
+            state.longPressTimer?.invalidate()
+            state.key.isPressed = false
+            if state.popupShown {
+                let choice = popup.selectedOption
+                hidePopup()
+                if let c = choice {
+                    state.key.onLongPressChoice?(c)
+                }
+            } else {
+                let inside = state.key.frame.contains(touch.location(in: self))
+                state.key.upAction?(inside)
+            }
+        }
+    }
+
+    override func touchesCancelled(_ touchSet: Set<UITouch>, with event: UIEvent?) {
+        for touch in touchSet {
+            guard let state = touches.removeValue(forKey: touch) else { continue }
+            state.longPressTimer?.invalidate()
+            state.key.isPressed = false
+            if state.popupShown {
+                hidePopup()
+            } else {
+                state.key.upAction?(false)
+            }
+        }
+    }
+
+    private func cancelAllTouches() {
+        for (_, state) in touches {
+            state.longPressTimer?.invalidate()
+            state.key.isPressed = false
+        }
+        touches.removeAll()
+        hidePopup()
     }
 
     // MARK: Globo de letras

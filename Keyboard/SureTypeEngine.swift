@@ -113,15 +113,194 @@ enum KeyMap {
     }
 }
 
+// MARK: - Diccionario binario (se lee tal cual del archivo, sin parsear texto)
+
+/// dict_XX.bin:  "STD2" | n u32 | seqOffsets u32 x(n+1) | wordOffsets u32 x(n+1)
+///               | freqs f32 xn | seqBlob | wordBlob   (little-endian)
+private struct BinaryDictionary {
+    let count: Int
+    let seqOffsets: [UInt32]
+    let wordOffsets: [UInt32]
+    let freqs: [Float]
+    let seqBlob: [UInt8]
+    let wordBlob: [UInt8]
+
+    init?(url: URL) {
+        guard let data = try? Data(contentsOf: url), data.count > 8 else { return nil }
+        guard data[0] == 0x53, data[1] == 0x54, data[2] == 0x44, data[3] == 0x32 else { return nil } // "STD2"
+        let n = data.withUnsafeBytes { Int($0.loadUnaligned(fromByteOffset: 4, as: UInt32.self).littleEndian) }
+        var off = 8
+        func readU32(_ count: Int) -> [UInt32]? {
+            let bytes = count * 4
+            guard off + bytes <= data.count else { return nil }
+            let out = data.withUnsafeBytes { raw -> [UInt32] in
+                var arr = [UInt32](repeating: 0, count: count)
+                for i in 0..<count {
+                    arr[i] = raw.loadUnaligned(fromByteOffset: off + i * 4, as: UInt32.self).littleEndian
+                }
+                return arr
+            }
+            off += bytes
+            return out
+        }
+        guard let so = readU32(n + 1), let wo = readU32(n + 1), let fbits = readU32(n) else { return nil }
+        let f = fbits.map { Float(bitPattern: $0) }
+        let seqLen = Int(so[n])
+        let wordLen = Int(wo[n])
+        guard off + seqLen + wordLen <= data.count else { return nil }
+        count = n
+        seqOffsets = so
+        wordOffsets = wo
+        freqs = f
+        seqBlob = [UInt8](data[off..<(off + seqLen)])
+        wordBlob = [UInt8](data[(off + seqLen)..<(off + seqLen + wordLen)])
+    }
+
+    @inline(__always) func seq(_ i: Int) -> ArraySlice<UInt8> {
+        return seqBlob[Int(seqOffsets[i])..<Int(seqOffsets[i + 1])]
+    }
+
+    @inline(__always) func seqLength(_ i: Int) -> Int {
+        return Int(seqOffsets[i + 1] - seqOffsets[i])
+    }
+
+    func word(_ i: Int) -> String {
+        return String(decoding: wordBlob[Int(wordOffsets[i])..<Int(wordOffsets[i + 1])], as: UTF8.self)
+    }
+
+    /// Primer indice cuya secuencia es >= key.
+    func lowerBound(_ key: [UInt8]) -> Int {
+        var lo = 0
+        var hi = count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if compare(seq(mid), key) < 0 {
+                lo = mid + 1
+            } else {
+                hi = mid
+            }
+        }
+        return lo
+    }
+
+    @inline(__always) private func compare(_ a: ArraySlice<UInt8>, _ b: [UInt8]) -> Int {
+        var i = a.startIndex
+        var j = 0
+        while i < a.endIndex && j < b.count {
+            if a[i] != b[j] { return a[i] < b[j] ? -1 : 1 }
+            i += 1
+            j += 1
+        }
+        if a.count == b.count { return 0 }
+        return a.count < b.count ? -1 : 1
+    }
+
+    @inline(__always) func seqHasPrefix(_ i: Int, _ prefix: [UInt8]) -> Bool {
+        let s = seq(i)
+        if s.count < prefix.count { return false }
+        var k = s.startIndex
+        for j in 0..<prefix.count {
+            if s[k] != prefix[j] { return false }
+            k += 1
+        }
+        return true
+    }
+
+    func indexOf(word w: String) -> Int? {
+        let keys = Array(KeyMap.keySequence(for: w).utf8)
+        if keys.isEmpty { return nil }
+        var i = lowerBound(keys)
+        while i < count && seqLength(i) == keys.count && seqHasPrefix(i, keys) {
+            if word(i) == w { return i }
+            i += 1
+        }
+        return nil
+    }
+}
+
+/// bigram_XX.bin: "STB2" | prevCount u32 | followerTotal u32 | prevOffsets u32 x(p+1)
+///                | prevWordOffsets u32 x(p+1) | (wordIdx u32, weight f32) x total | prevBlob
+private struct BinaryBigrams {
+    let prevCount: Int
+    let prevOffsets: [UInt32]
+    let prevWordOffsets: [UInt32]
+    let followerIdx: [UInt32]
+    let followerWeight: [Float]
+    let prevBlob: [UInt8]
+
+    init?(url: URL) {
+        guard let data = try? Data(contentsOf: url), data.count > 12 else { return nil }
+        guard data[0] == 0x53, data[1] == 0x54, data[2] == 0x42, data[3] == 0x32 else { return nil } // "STB2"
+        let p = data.withUnsafeBytes { Int($0.loadUnaligned(fromByteOffset: 4, as: UInt32.self).littleEndian) }
+        let total = data.withUnsafeBytes { Int($0.loadUnaligned(fromByteOffset: 8, as: UInt32.self).littleEndian) }
+        var off = 12
+        func readU32(_ count: Int) -> [UInt32]? {
+            let bytes = count * 4
+            guard off + bytes <= data.count else { return nil }
+            let out = data.withUnsafeBytes { raw -> [UInt32] in
+                var arr = [UInt32](repeating: 0, count: count)
+                for i in 0..<count {
+                    arr[i] = raw.loadUnaligned(fromByteOffset: off + i * 4, as: UInt32.self).littleEndian
+                }
+                return arr
+            }
+            off += bytes
+            return out
+        }
+        guard let po = readU32(p + 1), let pwo = readU32(p + 1) else { return nil }
+        guard off + total * 8 <= data.count else { return nil }
+        var fIdx = [UInt32](repeating: 0, count: total)
+        var fW = [Float](repeating: 0, count: total)
+        data.withUnsafeBytes { raw in
+            for i in 0..<total {
+                fIdx[i] = raw.loadUnaligned(fromByteOffset: off + i * 8, as: UInt32.self).littleEndian
+                fW[i] = Float(bitPattern: raw.loadUnaligned(fromByteOffset: off + i * 8 + 4, as: UInt32.self).littleEndian)
+            }
+        }
+        off += total * 8
+        let blobLen = Int(pwo[p])
+        guard off + blobLen <= data.count else { return nil }
+        prevCount = p
+        prevOffsets = po
+        prevWordOffsets = pwo
+        followerIdx = fIdx
+        followerWeight = fW
+        prevBlob = [UInt8](data[off..<(off + blobLen)])
+    }
+
+    /// Devuelve (indiceEnDiccionario, peso) de las palabras que suelen seguir a `prev`.
+    func followers(of prev: String) -> [(idx: Int, weight: Float)] {
+        let key = Array(prev.utf8)
+        var lo = 0
+        var hi = prevCount
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            let s = prevBlob[Int(prevWordOffsets[mid])..<Int(prevWordOffsets[mid + 1])]
+            var cmp = 0
+            var i = s.startIndex
+            var j = 0
+            while i < s.endIndex && j < key.count {
+                if s[i] != key[j] { cmp = s[i] < key[j] ? -1 : 1; break }
+                i += 1
+                j += 1
+            }
+            if cmp == 0 && s.count != key.count { cmp = s.count < key.count ? -1 : 1 }
+            if cmp < 0 { lo = mid + 1 } else { hi = mid }
+        }
+        guard lo < prevCount else { return [] }
+        let s = prevBlob[Int(prevWordOffsets[lo])..<Int(prevWordOffsets[lo + 1])]
+        guard s.elementsEqual(key) else { return [] }
+        var out: [(idx: Int, weight: Float)] = []
+        for k in Int(prevOffsets[lo])..<Int(prevOffsets[lo + 1]) {
+            out.append((idx: Int(followerIdx[k]), weight: followerWeight[k]))
+        }
+        return out
+    }
+}
+
 // MARK: - Motor de prediccion
 
 final class SureTypeEngine {
-
-    private struct Entry {
-        let keys: String
-        let display: String
-        let base: Float
-    }
 
     private struct Scored {
         let text: String
@@ -130,40 +309,43 @@ final class SureTypeEngine {
 
     private struct UserWord {
         let word: String
-        let keys: String
+        let keys: [UInt8]
         var count: Int
     }
 
-    /// Datos de un idioma: diccionario ordenado por teclas, pares de palabras y palabras mas comunes.
     private final class LanguageData {
-        let entries: [Entry]
-        let bigrams: [String: [String]]
-        let topWords: [String]
-
-        init(entries: [Entry], bigrams: [String: [String]], topWords: [String]) {
-            self.entries = entries
+        let dict: BinaryDictionary
+        let bigrams: BinaryBigrams?
+        init(dict: BinaryDictionary, bigrams: BinaryBigrams?) {
+            self.dict = dict
             self.bigrams = bigrams
-            self.topWords = topWords
         }
     }
 
     private(set) var language: Language
     private let defaults: UserDefaults
     private let bundle: Bundle
-    private let learnedKey = "learned.v1"
-    private let pairsKey = "learnedPairs.v1"
+    private let learnedKey = "learned.v2"
+    private let pairsKey = "learnedPairs.v2"
+    private let bySeqKey = "learnedBySeq.v2"
 
     // La carga se hace en segundo plano; `cache` se protege con `lock`.
     private let lock = NSLock()
     private var cache: [Language: LanguageData] = [:]
-    private var pendingGroup: DispatchGroup?
+    private var loading: Set<Language> = []
+    private var readyBlocks: [() -> Void] = []
 
     private var data: LanguageData?
-    private var entries: [Entry] = []
-    private var boosts: [Float] = []
+    private var boosts: [Int: Float] = [:]
+
+    /// Se llama en el hilo principal cada vez que un diccionario queda instalado
+    /// (al abrir el teclado o al cambiar de idioma).
+    var onInstall: (() -> Void)?
 
     private var learned: [String: Int] = [:]
     private var learnedPairs: [String: [String: Int]] = [:]
+    /// Lo clave del SureType real: para cada secuencia exacta, la ultima palabra que elegiste gana.
+    private var learnedBySeq: [String: String] = [:]
     private var userOnly: [UserWord] = []
     private var persistWork: DispatchWorkItem?
 
@@ -179,82 +361,108 @@ final class SureTypeEngine {
            let decoded = try? JSONDecoder().decode([String: [String: Int]].self, from: raw) {
             learnedPairs = decoded
         }
+        if let raw = defaults.data(forKey: bySeqKey),
+           let decoded = try? JSONDecoder().decode([String: String].self, from: raw) {
+            learnedBySeq = decoded
+        }
         startLoad(language)
+    }
+
+    var isReady: Bool {
+        return data != nil
     }
 
     /// Ejecuta `block` en el hilo principal cuando el diccionario ya esta cargado.
     func whenReady(_ block: @escaping () -> Void) {
-        if let group = pendingGroup {
-            group.notify(queue: DispatchQueue.main) { [weak self] in
-                self?.finishLoadIfNeeded()
-                block()
-            }
-        } else {
+        if data != nil {
+            block()
+            return
+        }
+        lock.lock()
+        let cached = cache[language]
+        if cached == nil {
+            readyBlocks.append(block)
+        }
+        lock.unlock()
+        if let c = cached {
+            install(c)
             block()
         }
     }
 
     func setLanguage(_ newLanguage: Language) {
         language = newLanguage
+        data = nil
+        boosts = [:]
         startLoad(newLanguage)
     }
 
     func resetLearned() {
         learned = [:]
         learnedPairs = [:]
+        learnedBySeq = [:]
         userOnly = []
-        for i in boosts.indices { boosts[i] = 0 }
+        boosts = [:]
         persistWork?.cancel()
         defaults.removeObject(forKey: learnedKey)
         defaults.removeObject(forKey: pairsKey)
+        defaults.removeObject(forKey: bySeqKey)
     }
 
-    // MARK: Carga
+    // MARK: Carga (nunca bloquea el hilo principal)
 
     private func startLoad(_ lang: Language) {
         lock.lock()
-        let cached = cache[lang]
-        lock.unlock()
-        if let c = cached {
-            install(c)
-            pendingGroup = nil
+        if let cached = cache[lang] {
+            lock.unlock()
+            install(cached)
+            flushReadyBlocks()
             return
         }
-        data = nil
-        entries = []
-        boosts = []
-        let group = DispatchGroup()
-        group.enter()
-        pendingGroup = group
+        if loading.contains(lang) {
+            lock.unlock()
+            return
+        }
+        loading.insert(lang)
+        lock.unlock()
+
         let bundle = self.bundle
-        DispatchQueue.global(qos: .userInitiated).async {
-            let loaded = SureTypeEngine.loadData(language: lang, bundle: bundle)
-            self.lock.lock()
-            self.cache[lang] = loaded
-            self.lock.unlock()
-            group.leave()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let dictURL = bundle.url(forResource: "dict_" + lang.rawValue, withExtension: "bin")
+            let biURL = bundle.url(forResource: "bigram_" + lang.rawValue, withExtension: "bin")
+            let dict = dictURL.flatMap { BinaryDictionary(url: $0) }
+            let bigrams = biURL.flatMap { BinaryBigrams(url: $0) }
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.lock.lock()
+                if let d = dict {
+                    self.cache[lang] = LanguageData(dict: d, bigrams: bigrams)
+                }
+                self.loading.remove(lang)
+                let ready = self.cache[lang]
+                self.lock.unlock()
+                if self.language == lang, let r = ready {
+                    self.install(r)
+                    self.flushReadyBlocks()
+                    self.onInstall?()
+                }
+            }
         }
     }
 
-    /// Si el diccionario aun se esta cargando, espera a que termine (solo ocurre si se teclea muy pronto).
-    private func finishLoadIfNeeded() {
-        guard let group = pendingGroup else { return }
-        group.wait()
-        pendingGroup = nil
+    private func flushReadyBlocks() {
         lock.lock()
-        let loaded = cache[language]
+        let blocks = readyBlocks
+        readyBlocks = []
         lock.unlock()
-        if let l = loaded {
-            install(l)
-        }
+        for b in blocks { b() }
     }
 
     private func install(_ d: LanguageData) {
         data = d
-        entries = d.entries
-        boosts = [Float](repeating: 0, count: d.entries.count)
+        boosts = [:]
         for (word, count) in learned {
-            if let idx = indexOf(word) {
+            if let idx = d.dict.indexOf(word: word) {
                 boosts[idx] = SureTypeEngine.boostValue(count)
             }
         }
@@ -262,73 +470,15 @@ final class SureTypeEngine {
     }
 
     private static func boostValue(_ count: Int) -> Float {
-        return 3.0 * Float(log(Double(count) + 1.0))
-    }
-
-    private static func loadData(language: Language, bundle: Bundle) -> LanguageData {
-        let entries = loadEntries(resource: "dict_" + language.rawValue, bundle: bundle)
-        let bigrams = loadBigrams(resource: "bigram_" + language.rawValue, bundle: bundle)
-
-        var top: [(word: String, score: Float)] = []
-        for e in entries {
-            if e.display.count < 2 { continue }
-            if top.count >= 12, let last = top.last, e.base <= last.score { continue }
-            var idx = top.count
-            while idx > 0 && top[idx - 1].score < e.base {
-                idx -= 1
-            }
-            top.insert((word: e.display, score: e.base), at: idx)
-            if top.count > 12 {
-                top.removeLast()
-            }
-        }
-        return LanguageData(entries: entries, bigrams: bigrams, topWords: top.map { $0.word })
-    }
-
-    private static func readText(resource: String, bundle: Bundle) -> String? {
-        guard let url = bundle.url(forResource: resource, withExtension: "txt"),
-              let raw = try? Data(contentsOf: url) else {
-            return nil
-        }
-        return String(data: raw, encoding: .utf8)
-    }
-
-    private static func loadEntries(resource: String, bundle: Bundle) -> [Entry] {
-        guard let text = readText(resource: resource, bundle: bundle) else { return [] }
-        var list: [Entry] = []
-        list.reserveCapacity(50_000)
-        text.enumerateLines { line, _ in
-            let parts = line.split(separator: "\t", omittingEmptySubsequences: false)
-            if parts.count == 3, let count = Double(String(parts[2])) {
-                list.append(Entry(keys: String(parts[0]),
-                                  display: String(parts[1]),
-                                  base: Float(log(count + 1.0))))
-            }
-        }
-        return list
-    }
-
-    private static func loadBigrams(resource: String, bundle: Bundle) -> [String: [String]] {
-        guard let text = readText(resource: resource, bundle: bundle) else { return [:] }
-        var table: [String: [String]] = [:]
-        text.enumerateLines { line, _ in
-            let parts = line.split(separator: "\t", omittingEmptySubsequences: false)
-            if parts.count == 2 {
-                var words: [String] = []
-                for w in parts[1].split(separator: " ") {
-                    words.append(String(w))
-                }
-                table[String(parts[0])] = words
-            }
-        }
-        return table
+        return min(2.2 * Float(log(Double(count) + 1.0)), 9.0)
     }
 
     private func rebuildUserOnly() {
+        guard let d = data else { return }
         var list: [UserWord] = []
         for (word, count) in learned {
-            if indexOf(word) != nil { continue }
-            let keys = KeyMap.keySequence(for: word)
+            if d.dict.indexOf(word: word) != nil { continue }
+            let keys = Array(KeyMap.keySequence(for: word).utf8)
             if !keys.isEmpty {
                 list.append(UserWord(word: word, keys: keys, count: count))
             }
@@ -336,33 +486,7 @@ final class SureTypeEngine {
         userOnly = list
     }
 
-    // MARK: Busqueda
-
-    /// Primer indice cuya secuencia de teclas es >= key.
-    private func lowerBound(_ key: String) -> Int {
-        var lo = 0
-        var hi = entries.count
-        while lo < hi {
-            let mid = (lo + hi) / 2
-            if entries[mid].keys < key {
-                lo = mid + 1
-            } else {
-                hi = mid
-            }
-        }
-        return lo
-    }
-
-    private func indexOf(_ word: String) -> Int? {
-        let keys = KeyMap.keySequence(for: word)
-        if keys.isEmpty { return nil }
-        var i = lowerBound(keys)
-        while i < entries.count && entries[i].keys == keys {
-            if entries[i].display == word { return i }
-            i += 1
-        }
-        return nil
-    }
+    // MARK: Utiles
 
     /// Comprueba las letras elegidas a mano contra una palabra.
     private func matches(_ display: String, _ explicit: [Int: Character]) -> Bool {
@@ -388,55 +512,26 @@ final class SureTypeEngine {
         }
     }
 
-    // MARK: Contexto (palabra anterior)
-
-    /// Palabras que suelen seguir a `previous`, mezclando el corpus y lo que el usuario ha escrito.
-    private func contextWords(after previous: String?, limit: Int) -> [String] {
-        guard let prev = previous, let d = data else { return [] }
-        var scores: [String: Float] = [:]
-        if let list = d.bigrams[prev] {
-            for (rank, w) in list.enumerated() {
-                scores[w] = 10.0 - Float(rank)
-            }
-        }
-        if let pairs = learnedPairs[prev] {
-            for (w, c) in pairs {
-                scores[w, default: 0] += 6.0 + 2.0 * Float(log(Double(c) + 1.0))
-            }
-        }
-        let ordered = scores.sorted { a, b in
-            if a.value != b.value { return a.value > b.value }
-            return a.key < b.key
-        }
-        var result: [String] = []
-        for item in ordered.prefix(limit) {
-            result.append(item.key)
-        }
-        return result
-    }
-
-    /// Sugerencias para cuando no hay palabra en curso (barra entre palabras).
-    func nextWords(after previous: String?, limit: Int = 4) -> [String] {
-        finishLoadIfNeeded()
-        var words = contextWords(after: previous, limit: limit)
-        if words.count < limit, let d = data {
-            for w in d.topWords {
-                if words.count >= limit { break }
-                if !words.contains(w) {
-                    words.append(w)
-                }
-            }
-        }
-        return words
-    }
-
     // MARK: Prediccion de la palabra en curso
 
     func suggest(_ slots: [Slot], previous: String?, includeFuzzy: Bool) -> Suggestions {
         if slots.isEmpty {
             return Suggestions(words: [], isLiteral: false)
         }
-        finishLoadIfNeeded()
+        var literal = ""
+        for slot in slots {
+            switch slot {
+            case .key(let id):
+                literal.append(KeyMap.keyLetters[id]?.first ?? "?")
+            case .letter(let c):
+                literal.append(c)
+            }
+        }
+        guard let d = data else {
+            // El diccionario aun no termina de cargar (primeras decimas de segundo):
+            // se muestran las letras literales sin congelar el teclado.
+            return Suggestions(words: [literal], isLiteral: true)
+        }
 
         var seq = ""
         var explicit: [Int: Character] = [:]
@@ -452,43 +547,68 @@ final class SureTypeEngine {
         let seqBytes = Array(seq.utf8)
         let seqLength = seqBytes.count
         let limit = 10
+        let mruWord = learnedBySeq[seq]
 
-        // 1) Diccionario: exactas (mismo largo) y completaciones (mas largas)
+        // 1) Diccionario: exactas (mismo largo) y completaciones (mas largas, con castigo por letra extra)
         var main: [Scored] = []
-        var i = lowerBound(seq)
-        while i < entries.count {
-            let e = entries[i]
-            if !e.keys.utf8.starts(with: seqBytes) { break }
+        var i = d.dict.lowerBound(seqBytes)
+        while i < d.dict.count {
+            if !d.dict.seqHasPrefix(i, seqBytes) { break }
             let idx = i
             i += 1
-            let exact = e.keys.utf8.count == seqLength
-            let score = e.base + boosts[idx] + (exact ? 3.0 : 0.0)
+            let entryLen = d.dict.seqLength(idx)
+            let exact = entryLen == seqLength
+            var score = d.dict.freqs[idx] + (boosts[idx] ?? 0)
+            score += exact ? 4.0 : -0.7 * Float(entryLen - seqLength)
+            if main.count >= limit, let last = main.last, score + 8.0 <= last.score { continue }
+            let w = d.dict.word(idx)
+            if exact && w == mruWord { score += 8.0 }
             if main.count >= limit, let last = main.last, score <= last.score { continue }
-            if !matches(e.display, explicit) { continue }
-            insert(Scored(text: e.display, score: score), into: &main, limit: limit)
+            if !matches(w, explicit) { continue }
+            insert(Scored(text: w, score: score), into: &main, limit: limit)
         }
 
         // 2) Palabras que encajan con la palabra anterior reciben un empujon
-        let context = contextWords(after: previous, limit: 8)
-        for (rank, w) in context.enumerated() {
-            let keys = KeyMap.keySequence(for: w)
-            if !keys.utf8.starts(with: seqBytes) { continue }
-            if !matches(w, explicit) { continue }
-            var base: Float = 6.0
-            if let idx = indexOf(w) {
-                base = entries[idx].base + boosts[idx]
+        if let prev = previous {
+            if let bi = d.bigrams {
+                for f in bi.followers(of: prev) {
+                    let idx = f.idx
+                    if !d.dict.seqHasPrefix(idx, seqBytes) { continue }
+                    let w = d.dict.word(idx)
+                    if !matches(w, explicit) { continue }
+                    let entryLen = d.dict.seqLength(idx)
+                    let exact = entryLen == seqLength
+                    var score = d.dict.freqs[idx] + (boosts[idx] ?? 0) + f.weight
+                    score += exact ? 4.0 : -0.7 * Float(entryLen - seqLength)
+                    if exact && w == mruWord { score += 8.0 }
+                    insert(Scored(text: w, score: score), into: &main, limit: limit)
+                }
             }
-            let exact = keys.utf8.count == seqLength
-            let score = base + (exact ? 3.0 : 0.0) + 3.0 - 0.25 * Float(rank)
-            insert(Scored(text: w, score: score), into: &main, limit: limit)
+            if let pairs = learnedPairs[prev] {
+                for (w, c) in pairs {
+                    let keys = Array(KeyMap.keySequence(for: w).utf8)
+                    if keys.count < seqLength || !keys.starts(with: seqBytes) { continue }
+                    if !matches(w, explicit) { continue }
+                    let exact = keys.count == seqLength
+                    var base: Float = 4.0
+                    if let idx = d.dict.indexOf(word: w) {
+                        base = d.dict.freqs[idx] + (boosts[idx] ?? 0)
+                    }
+                    var score = base + 6.0 + 1.5 * Float(log(Double(c) + 1.0))
+                    score += exact ? 4.0 : -0.7 * Float(keys.count - seqLength)
+                    insert(Scored(text: w, score: score), into: &main, limit: limit)
+                }
+            }
         }
 
         // 3) Palabras nuevas que el usuario ha ido aprendiendo
         for u in userOnly {
-            if !u.keys.utf8.starts(with: seqBytes) { continue }
+            if u.keys.count < seqLength || !u.keys.starts(with: seqBytes) { continue }
             if !matches(u.word, explicit) { continue }
-            let exact = u.keys.utf8.count == seqLength
-            let score = 1.0 + SureTypeEngine.boostValue(u.count) + (exact ? 3.0 : 0.0)
+            let exact = u.keys.count == seqLength
+            var score = 2.0 + SureTypeEngine.boostValue(u.count)
+            score += exact ? 4.0 : -0.7 * Float(u.keys.count - seqLength)
+            if exact && u.word == mruWord { score += 8.0 }
             insert(Scored(text: u.word, score: score), into: &main, limit: limit)
         }
 
@@ -497,7 +617,7 @@ final class SureTypeEngine {
         if includeFuzzy && explicit.isEmpty && seqLength >= 2 {
             var known = Set<String>()
             for item in main { known.insert(item.text) }
-            fuzzy = fuzzyCandidates(seq, limit: main.count < 6 ? 5 : 3, exclude: known)
+            fuzzy = fuzzyCandidates(seqBytes, d: d, limit: main.count < 6 ? 5 : 3, exclude: known)
         }
 
         var words: [String] = []
@@ -509,61 +629,56 @@ final class SureTypeEngine {
         }
 
         if words.isEmpty {
-            var literal = ""
-            for slot in slots {
-                switch slot {
-                case .key(let id):
-                    literal.append(KeyMap.keyLetters[id]?.first ?? "?")
-                case .letter(let c):
-                    literal.append(c)
-                }
-            }
             return Suggestions(words: [literal], isLiteral: true)
+        }
+        // Las letras literales siempre se pueden alcanzar rotando hasta el final.
+        if explicit.isEmpty && !seen.contains(literal) {
+            words.append(literal)
         }
         return Suggestions(words: words, isLiteral: false)
     }
 
-    private func fuzzyCandidates(_ seq: String, limit: Int, exclude: Set<String>) -> [Scored] {
-        let chars = Array(seq)
-        var variants = Set<String>()
+    private func fuzzyCandidates(_ seqBytes: [UInt8], d: LanguageData, limit: Int, exclude: Set<String>) -> [Scored] {
+        var variants = Set<[UInt8]>()
 
         // Tecla vecina por error
-        for i in 0..<chars.count {
-            for n in KeyMap.neighbors[chars[i]] ?? [] {
-                var v = chars
-                v[i] = n
-                variants.insert(String(v))
+        for i in 0..<seqBytes.count {
+            let c = Character(UnicodeScalar(seqBytes[i]))
+            for n in KeyMap.neighbors[c] ?? [] {
+                var v = seqBytes
+                v[i] = n.asciiValue ?? v[i]
+                variants.insert(v)
             }
         }
         // Dos teclas intercambiadas
-        if chars.count >= 2 {
-            for i in 0..<(chars.count - 1) {
-                if chars[i] == chars[i + 1] { continue }
-                var v = chars
+        if seqBytes.count >= 2 {
+            for i in 0..<(seqBytes.count - 1) {
+                if seqBytes[i] == seqBytes[i + 1] { continue }
+                var v = seqBytes
                 v.swapAt(i, i + 1)
-                variants.insert(String(v))
+                variants.insert(v)
             }
         }
         // Una tecla de mas
-        if chars.count >= 3 {
-            for i in 0..<chars.count {
-                var v = chars
+        if seqBytes.count >= 3 {
+            for i in 0..<seqBytes.count {
+                var v = seqBytes
                 v.remove(at: i)
-                variants.insert(String(v))
+                variants.insert(v)
             }
         }
-        variants.remove(seq)
+        variants.remove(seqBytes)
 
         var result: [Scored] = []
         for v in variants {
-            var j = lowerBound(v)
-            while j < entries.count && entries[j].keys == v {
-                let e = entries[j]
+            var j = d.dict.lowerBound(v)
+            while j < d.dict.count && d.dict.seqLength(j) == v.count && d.dict.seqHasPrefix(j, v) {
                 let idx = j
                 j += 1
-                if exclude.contains(e.display) { continue }
-                let score = e.base + boosts[idx] - 5.0
-                insert(Scored(text: e.display, score: score), into: &result, limit: limit)
+                let w = d.dict.word(idx)
+                if exclude.contains(w) { continue }
+                let score = d.dict.freqs[idx] + (boosts[idx] ?? 0) - 6.0
+                insert(Scored(text: w, score: score), into: &result, limit: limit)
             }
         }
         return result
@@ -571,15 +686,16 @@ final class SureTypeEngine {
 
     // MARK: Aprendizaje
 
-    /// Suma un uso a la palabra elegida y al par (palabra anterior, palabra).
+    /// Suma un uso a la palabra elegida, al par (palabra anterior, palabra) y la fija
+    /// como primera opcion de su secuencia exacta (como hacia el SureType real).
     /// Las palabras que no estan en el diccionario solo se aprenden si `allowNew` es true
     /// (cuando las deletreaste letra por letra).
     func learn(_ word: String, previous: String?, allowNew: Bool) {
-        finishLoadIfNeeded()
+        guard let d = data else { return }
         let w = word.trimmingCharacters(in: CharacterSet.whitespaces)
         if w.isEmpty { return }
 
-        let idx = indexOf(w)
+        let idx = d.dict.indexOf(word: w)
         let seen = learned[w] != nil
         if idx == nil && !seen && !allowNew { return }
 
@@ -593,10 +709,15 @@ final class SureTypeEngine {
                 userOnly[k].count = newCount
             }
         } else {
-            let keys = KeyMap.keySequence(for: w)
+            let keys = Array(KeyMap.keySequence(for: w).utf8)
             if !keys.isEmpty {
                 userOnly.append(UserWord(word: w, keys: keys, count: 1))
             }
+        }
+
+        let seq = KeyMap.keySequence(for: w)
+        if !seq.isEmpty {
+            learnedBySeq[seq] = w
         }
 
         if let p = previous {
@@ -609,6 +730,10 @@ final class SureTypeEngine {
         }
         if learnedPairs.count > 3000 {
             learnedPairs = learnedPairs.filter { $0.value.values.reduce(0, +) > 1 }
+        }
+        if learnedBySeq.count > 5000 {
+            // Se queda solo con las de palabras usadas mas de una vez
+            learnedBySeq = learnedBySeq.filter { (learned[$0.value] ?? 0) > 1 }
         }
         schedulePersist()
     }
@@ -633,6 +758,9 @@ final class SureTypeEngine {
         }
         if let raw = try? JSONEncoder().encode(learnedPairs) {
             defaults.set(raw, forKey: pairsKey)
+        }
+        if let raw = try? JSONEncoder().encode(learnedBySeq) {
+            defaults.set(raw, forKey: bySeqKey)
         }
     }
 }
